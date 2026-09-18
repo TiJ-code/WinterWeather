@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "winterweather",
+  "version": "${version}",
+  "name": "WinterWeather",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/winterweather/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-datagen": [
+      "dk.tij.winterweather.client.WinterWeatherDataGenerator"
+    ],
+    "client": [
+      "dk.tij.winterweather.client.WinterWeatherClient"
+    ],
+    "main": [
+      "dk.tij.winterweather.WinterWeather"
+    ]
+  },
+  "mixins": [
+    "winterweather.mixins.json",
+    {
+      "config": "winterweather.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}

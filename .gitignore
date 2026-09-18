@@ -1,0 +1,28 @@
+# Gradle
+.gradle/
+build/
+
+# Fabric Loom run directories
+run/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Visual Studio Code
+.vscode/
+
+# Java and JVM crash logs
+hs_err_pid*
+replay_pid*
+
+# OS metadata
+.DS_Store
+Thumbs.db
