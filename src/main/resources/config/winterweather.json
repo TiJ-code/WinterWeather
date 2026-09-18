@@ -1,0 +1,14 @@
+{
+  "freeze_rate": 1,
+  "thaw_rate": 2,
+  "heat_sources": {
+    "minecraft:torch": 8.0,
+    "minecraft:wall_torch": 8.0,
+    "minecraft:campfire": 8.0,
+    "minecraft:soul_campfire": 8.0,
+    "minecraft:fire": 5.0,
+    "minecraft:soul_fire": 5.0,
+    "minecraft:lava": 6.0,
+    "minecraft:magma_block": 3.0
+  }
+}
