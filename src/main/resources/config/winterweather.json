@@ -53,6 +53,7 @@
   "torches": {
     "enabled": true,
     "burnout_seconds": 86400,
+    "weather_extinguishes": true,
     "use_unlit_state": true,
     "relight": {
       "flint_and_steel": true,

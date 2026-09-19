@@ -71,6 +71,9 @@ public final class TorchManager {
 
             if (isLit(state) && entry.getValue().isExpired(level.getGameTime())) {
                 extinguish(level, pos, state);
+            } else if (isLit(state) && config.get().torchWeatherExtinguishes()
+                    && level.isRainingAt(pos) && level.canSeeSky(pos)) {
+                extinguish(level, pos, state);
             }
         }
     }

@@ -38,6 +38,7 @@ public record FreezingConfig(
         Map<Identifier, Double> armorIsolation,
         boolean torchesEnabled,
         int torchBurnoutSeconds,
+        boolean torchWeatherExtinguishes,
         boolean torchRelightingEnabled,
         int torchRelightDurabilityCost
 ) {
@@ -64,7 +65,7 @@ public record FreezingConfig(
         armor.put(Identifier.parse("minecraft:leather_chestplate"), .40);
         armor.put(Identifier.parse("minecraft:leather_helmet"), .15);
         return new FreezingConfig(false, 1800, 5, .8, 1.1, 1, Maths::smootherstep,
-                sources, armor, true, 86400, true, 1);
+                sources, armor, true, 86400, true, true, 1);
     }
 
     public static FreezingConfig load() {
@@ -185,6 +186,7 @@ public record FreezingConfig(
                 interpolation, sources, armor,
                 booleanValue(object(root, "torches"), "enabled", true),
                 positiveInt(object(root, "torches"), "burnout_seconds", 86400),
+                booleanValue(object(root, "torches"), "weather_extinguishes", true),
                 booleanValue(object(object(root, "torches"), "relight"), "flint_and_steel", true),
                 positiveInt(object(object(root, "torches"), "relight"), "durability_cost", 1)
         );
