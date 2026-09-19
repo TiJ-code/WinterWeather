@@ -10,6 +10,7 @@ import dk.tij.winterweather.torch.TorchInteraction;
 import dk.tij.winterweather.torch.TorchManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 
 public class WinterWeather implements ModInitializer {
     private static boolean modEnabled;
@@ -35,6 +36,12 @@ public class WinterWeather implements ModInitializer {
             freezeController.tick(server, config);
             for (var level : server.getAllLevels()) {
                 torchManager.tick(level);
+            }
+        });
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            for (var level : server.getAllLevels()) {
+                dk.tij.winterweather.data.TorchData.get(level);
+                level.getDataStorage().saveAndJoin();
             }
         });
         WinterCommand.register(this);

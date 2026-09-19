@@ -20,12 +20,16 @@ public final class TorchManager {
 
     public void registerPlacedTorch(ServerLevel level, BlockPos pos, BlockState state) {
         if (config.get().torchesEnabled() && isExtinguishable(state)) {
+            TorchData data = TorchData.get(level);
+            if (data.get(pos) != null) {
+                return;
+            }
             BlockState unlitState = unlitState(state);
             if (unlitState != state) {
                 level.setBlock(pos, unlitState, 3);
                 state = unlitState;
             }
-            TorchData.get(level).set(pos, new TorchState(0));
+            data.set(pos, new TorchState(0));
         }
     }
 
