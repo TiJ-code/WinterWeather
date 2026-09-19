@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "facing=north,lit=true": { "model": "minecraft:block/wall_torch", "uvlock": true },
+    "facing=north,lit=false": { "model": "minecraft:block/wall_torch", "uvlock": true },
+    "facing=south,lit=true": { "model": "minecraft:block/wall_torch", "uvlock": true },
+    "facing=south,lit=false": { "model": "minecraft:block/wall_torch", "uvlock": true },
+    "facing=west,lit=true": { "model": "minecraft:block/wall_torch", "uvlock": true },
+    "facing=west,lit=false": { "model": "minecraft:block/wall_torch", "uvlock": true },
+    "facing=east,lit=true": { "model": "minecraft:block/wall_torch", "uvlock": true },
+    "facing=east,lit=false": { "model": "minecraft:block/wall_torch", "uvlock": true }
+  }
+}

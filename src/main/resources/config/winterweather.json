@@ -49,5 +49,20 @@
         "radius": 3.0
       }
     }
+  },
+  "torches": {
+    "enabled": true,
+    "burnout_seconds": 86400,
+    "use_unlit_state": true,
+    "relight": {
+      "flint_and_steel": true,
+      "durability_cost": 1
+    },
+    "torch_types": {
+      "minecraft:torch": true,
+      "minecraft:wall_torch": true,
+      "minecraft:soul_torch": true,
+      "minecraft:soul_wall_torch": true
+    }
   }
 }

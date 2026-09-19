@@ -4,7 +4,12 @@
   "package": "dk.tij.winterweather.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
-    "LivingEntityMixin"
+    "LivingEntityMixin",
+    "BlockMixin",
+    "TorchBlockMixin",
+    "WallTorchBlockMixin",
+    "BlockStateBaseMixin",
+    "BlockLifecycleMixin"
   ],
   "injectors": {
     "defaultRequire": 1
