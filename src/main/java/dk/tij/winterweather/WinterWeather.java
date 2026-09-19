@@ -72,5 +72,9 @@ public class WinterWeather implements ModInitializer {
         return INSTANCE.torchManager;
     }
 
+    public static TorchManager torchManagerOrNull() {
+        return INSTANCE == null ? null : INSTANCE.torchManager;
+    }
+
     private static WinterWeather INSTANCE;
 }

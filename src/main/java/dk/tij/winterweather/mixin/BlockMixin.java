@@ -1,8 +1,9 @@
 package dk.tij.winterweather.mixin;
 
+import dk.tij.winterweather.WinterWeather;
 import dk.tij.winterweather.torch.TorchBlocks;
+import dk.tij.winterweather.torch.TorchManager;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.TorchBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -24,13 +25,13 @@ public abstract class BlockMixin {
     }
 
     @Inject(method = "defaultBlockState", at = @At("RETURN"), cancellable = true)
-    private void winterweather$defaultTorchState(CallbackInfoReturnable<BlockState> callbackInfo) {
+    private void winterweather$defaultExtinguishableState(
+            CallbackInfoReturnable<BlockState> callbackInfo
+    ) {
         BlockState state = callbackInfo.getReturnValue();
-        if (state.getBlock() instanceof TorchBlock && state.hasProperty(TorchBlocks.LIT)) {
-            callbackInfo.setReturnValue(state.setValue(TorchBlocks.LIT, false));
-        } else if (state.getBlock() instanceof CampfireBlock
-                && state.hasProperty(CampfireBlock.LIT)) {
-            callbackInfo.setReturnValue(state.setValue(CampfireBlock.LIT, false));
+        var manager = WinterWeather.torchManagerOrNull();
+        if (manager != null && manager.isExtinguishable(state)) {
+            callbackInfo.setReturnValue(TorchManager.withLit(state, false));
         }
     }
 }
