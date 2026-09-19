@@ -26,7 +26,7 @@ public abstract class BlockMixin {
     private void winterweather$defaultTorchState(CallbackInfoReturnable<BlockState> callbackInfo) {
         BlockState state = callbackInfo.getReturnValue();
         if (state.getBlock() instanceof TorchBlock && state.hasProperty(TorchBlocks.LIT)) {
-            callbackInfo.setReturnValue(state.setValue(TorchBlocks.LIT, true));
+            callbackInfo.setReturnValue(state.setValue(TorchBlocks.LIT, false));
         }
     }
 }
