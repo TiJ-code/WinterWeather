@@ -6,6 +6,8 @@ import dk.tij.winterweather.data.PlayerDataHandler;
 import dk.tij.winterweather.network.FreezeNetworking;
 import dk.tij.winterweather.server.FreezeServerController;
 import dk.tij.winterweather.state.FreezeStateManager;
+import dk.tij.winterweather.torch.TorchInteraction;
+import dk.tij.winterweather.torch.TorchManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 
@@ -15,17 +17,26 @@ public class WinterWeather implements ModInitializer {
     private FreezeServerController freezeController;
     private FreezingConfig config;
     private boolean enabled;
+    private TorchManager torchManager;
 
     @Override
     public void onInitialize() {
+        INSTANCE = this;
         config = FreezingConfig.load();
         enabled = config.enabled();
         modEnabled = enabled;
 
         freezeState = new FreezeStateManager(new PlayerDataHandler());
+        torchManager = new TorchManager(() -> config);
+        TorchInteraction.register(torchManager);
         freezeController = new FreezeServerController(freezeState, () -> enabled);
         FreezeNetworking.register(freezeState, () -> config);
-        ServerTickEvents.END_SERVER_TICK.register(server -> freezeController.tick(server, config));
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            freezeController.tick(server, config);
+            for (var level : server.getAllLevels()) {
+                torchManager.tick(level);
+            }
+        });
         WinterCommand.register(this);
     }
 
@@ -57,4 +68,9 @@ public class WinterWeather implements ModInitializer {
     public FreezeStateManager freezeState() {
         return freezeState;
     }
+    public static TorchManager torchManager() {
+        return INSTANCE.torchManager;
+    }
+
+    private static WinterWeather INSTANCE;
 }
