@@ -23,23 +23,29 @@ public final class TorchInteraction {
 
     private static InteractionResult interact(TorchManager manager, Player player, Level level,
                                               InteractionHand hand, BlockHitResult hit) {
-        if (!(level instanceof ServerLevel serverLevel)) {
-            return InteractionResult.PASS;
-        }
-
         BlockPos pos = hit.getBlockPos();
-        BlockState state = serverLevel.getBlockState(pos);
+        BlockState state = level.getBlockState(pos);
         if (!TorchBlocks.isTorch(state)) {
             return InteractionResult.PASS;
         }
 
         ItemStack held = player.getItemInHand(hand);
-        if (!TorchManager.isLit(state) && held.is(Items.FLINT_AND_STEEL)
-                && manager.relightingEnabled()) {
-            if (manager.relight(serverLevel, pos, state)) {
-                held.hurtAndBreak(manager.relightDurabilityCost(), player, hand);
-                return InteractionResult.SUCCESS;
+        if (held.is(Items.FLINT_AND_STEEL)) {
+            if (!TorchManager.isLit(state) && manager.relightingEnabled()) {
+                if (!(level instanceof ServerLevel serverLevel)) {
+                    return InteractionResult.SUCCESS;
+                }
+                if (manager.relight(serverLevel, pos, state)) {
+                    held.hurtAndBreak(manager.relightDurabilityCost(), player, hand);
+                    return InteractionResult.SUCCESS;
+                }
             }
+
+            return InteractionResult.FAIL;
+        }
+
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return InteractionResult.PASS;
         }
 
         if (TorchManager.isLit(state) && held.isEmpty()) {
