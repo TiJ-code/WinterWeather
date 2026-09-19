@@ -6,8 +6,8 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 public final class TorchBlocks {
     public static final BooleanProperty LIT = BooleanProperty.create("lit");
 
-    public static boolean isTorch(BlockState state) {
-        return state.is(ModTags.TORCHES);
+    public static boolean isExtinguishable(BlockState state) {
+        return state.is(ModTags.EXTINGUISHABLE_FIRE);
     }
 
     private TorchBlocks() {}

@@ -6,8 +6,8 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 
 public final class ModTags {
-    public static final TagKey<Block> TORCHES =
-            TagKey.create(Registries.BLOCK, Identifier.parse("winterweather:realistic_torches"));
+    public static final TagKey<Block> EXTINGUISHABLE_FIRE =
+            TagKey.create(Registries.BLOCK, Identifier.parse("winterweather:extinguishable_fire"));
 
     private ModTags() {}
 }

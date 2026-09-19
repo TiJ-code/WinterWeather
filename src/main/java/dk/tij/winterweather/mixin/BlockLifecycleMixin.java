@@ -23,7 +23,7 @@ public abstract class BlockLifecycleMixin {
             ItemStack stack, CallbackInfo callbackInfo
     ) {
         if (level instanceof net.minecraft.server.level.ServerLevel serverLevel
-                && TorchBlocks.isTorch(state)) {
+                && WinterWeather.torchManager().isExtinguishable(state)) {
             WinterWeather.torchManager().registerPlacedTorch(serverLevel, pos, state);
         }
     }
@@ -33,7 +33,7 @@ public abstract class BlockLifecycleMixin {
             LevelAccessor level, BlockPos pos, BlockState state, CallbackInfo callbackInfo
     ) {
         if (level instanceof net.minecraft.server.level.ServerLevel serverLevel
-                && TorchBlocks.isTorch(state)) {
+                && WinterWeather.torchManager().isExtinguishable(state)) {
             WinterWeather.torchManager().removeTorch(serverLevel, pos);
         }
     }

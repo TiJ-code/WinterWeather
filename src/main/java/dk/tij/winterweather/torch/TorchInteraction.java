@@ -25,7 +25,7 @@ public final class TorchInteraction {
                                               InteractionHand hand, BlockHitResult hit) {
         BlockPos pos = hit.getBlockPos();
         BlockState state = level.getBlockState(pos);
-        if (!TorchBlocks.isTorch(state)) {
+        if (!manager.isExtinguishable(state)) {
             return InteractionResult.PASS;
         }
 
