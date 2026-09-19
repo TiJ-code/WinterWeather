@@ -59,7 +59,7 @@
     },
     "block_types": {
       "minecraft:torch": {
-        "burnout_seconds": 10
+        "burnout_seconds": 86400
       },
       "minecraft:wall_torch": {
         "burnout_seconds": 86400

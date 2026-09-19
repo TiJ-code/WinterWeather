@@ -6,8 +6,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.CampfireBlock;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.function.Supplier;
 
@@ -20,10 +20,12 @@ public final class TorchManager {
 
     public void registerPlacedTorch(ServerLevel level, BlockPos pos, BlockState state) {
         if (config.get().torchesEnabled() && isExtinguishable(state)) {
-            int burnoutTicks = burnoutTicks(state);
-            if (burnoutTicks > 0) {
-                TorchData.get(level).set(pos, new TorchState(level.getGameTime() + burnoutTicks));
+            BlockState unlitState = unlitState(state);
+            if (unlitState != state) {
+                level.setBlock(pos, unlitState, 3);
+                state = unlitState;
             }
+            TorchData.get(level).set(pos, new TorchState(0));
         }
     }
 
@@ -80,10 +82,11 @@ public final class TorchManager {
         if (state.hasProperty(TorchBlocks.LIT)) {
             return state.getValue(TorchBlocks.LIT);
         }
-        return !state.hasProperty(CampfireBlock.LIT) || state.getValue(CampfireBlock.LIT);
+        return !state.hasProperty(CampfireBlock.LIT)
+                || state.getValue(CampfireBlock.LIT);
     }
 
-    private static BlockState withLit(BlockState state, boolean lit) {
+    public static BlockState withLit(BlockState state, boolean lit) {
         if (state.hasProperty(TorchBlocks.LIT)) {
             return state.setValue(TorchBlocks.LIT, lit);
         }
@@ -91,6 +94,10 @@ public final class TorchManager {
             return state.setValue(CampfireBlock.LIT, lit);
         }
         return state;
+    }
+
+    public static BlockState unlitState(BlockState state) {
+        return withLit(state, false);
     }
 
     private int burnoutTicks(BlockState state) {
