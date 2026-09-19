@@ -9,7 +9,8 @@
     "TorchBlockMixin",
     "WallTorchBlockMixin",
     "BlockStateBaseMixin",
-    "BlockLifecycleMixin"
+    "BlockLifecycleMixin",
+    "LevelMixin"
   ],
   "injectors": {
     "defaultRequire": 1
