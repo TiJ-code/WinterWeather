@@ -4,7 +4,7 @@
       "model": "minecraft:block/soul_torch"
     },
     "lit=false": {
-      "model": "minecraft:block/soul_torch"
+      "model": "minecraft:block/soul_torch_unlit"
     }
   }
 }

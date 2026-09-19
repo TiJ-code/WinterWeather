@@ -1,6 +1,10 @@
 {
   "variants": {
-    "lit=true": { "model": "minecraft:block/copper_torch" },
-    "lit=false": { "model": "minecraft:block/copper_torch" }
+    "lit=true": {
+      "model": "minecraft:block/copper_torch"
+    },
+    "lit=false": {
+      "model": "minecraft:block/copper_torch_unlit"
+    }
   }
 }
