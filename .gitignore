@@ -1,3 +1,5 @@
+doc-files/
+
 # Gradle
 .gradle/
 build/

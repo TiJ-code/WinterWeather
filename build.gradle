@@ -19,6 +19,12 @@ loom {
             sourceSet sourceSets.client
         }
     }
+
+    runs {
+        client {
+            programArgs "--msa"
+        }
+    }
 }
 
 fabricApi {
@@ -41,6 +47,7 @@ dependencies {
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    implementation "com.ptsmods:devlogin:3.5.1:fabric"
 }
 
 processResources {

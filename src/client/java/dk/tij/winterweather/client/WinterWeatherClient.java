@@ -2,10 +2,10 @@ package dk.tij.winterweather.client;
 
 import dk.tij.winterweather.config.FreezingConfig;
 import dk.tij.winterweather.network.HeatStatePayload;
+import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
-import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.level.block.Blocks;
@@ -17,18 +17,19 @@ public class WinterWeatherClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        PayloadTypeRegistry.clientboundPlay().register(HeatStatePayload.TYPE, HeatStatePayload.CODEC);
         FreezingConfig config = FreezingConfig.load();
         ClientPlayNetworking.registerGlobalReceiver(HeatStatePayload.TYPE, (payload, context) ->
-                context.client().execute(() -> HeatStatePayloadState.update(
-                        Math.max(0, Math.min(config.criticalFreezingTicks(), payload.actualFreezeTicks())))));
+                context.client().execute(() -> HeatStatePayloadState.updateFromServer(
+                        payload.enabled(), Math.max(0, payload.actualFreezeTicks()))));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player == null || client.level == null) {
                 HeatStatePayloadState.reset();
                 return;
             }
 
-            if (!HeatStatePayloadState.initialized()) {
+            if (!config.enabled()
+                    || !HeatStatePayloadState.initialized()
+                    || !HeatStatePayloadState.serverEnabled()) {
                 return;
             }
 
@@ -46,14 +47,13 @@ public class WinterWeatherClient implements ClientModInitializer {
                     client.player.isOnFire(),
                     powderSnowBlocks(client)
             );
-            double progress = Math.max(0, Math.min(config.criticalFreezingTicks(),
-                    HeatStatePayloadState.actualFreezeTicks() + temperatureDelta));
+            double progress = Math.max(0,
+                    HeatStatePayloadState.actualFreezeTicks() + temperatureDelta);
             HeatStatePayloadState.update(progress);
-            client.player.setTicksFrozen(Math.min(FreezingConfig.MAX_FROZEN_TICKS, config.toFrozenTicks(progress)));
 
             if (client.level.getGameTime() % REPORT_INTERVAL_TICKS == 0
                     && ClientPlayNetworking.canSend(HeatStatePayload.TYPE)) {
-                ClientPlayNetworking.send(new HeatStatePayload(progress));
+                ClientPlayNetworking.send(new HeatStatePayload(true, progress));
             }
         });
     }

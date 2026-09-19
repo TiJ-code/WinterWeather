@@ -82,6 +82,7 @@ public final class FreezingConfig {
     public double playerRadius() { return playerRadius; }
     public double playerBurningBoost() { return playerBurningBoost; }
     public double playerPowderSnowBoost() { return playerPowderSnowBoost; }
+    public boolean isInsulatedArmor(Identifier item) { return armorIsolation.containsKey(item); }
 
     public static JsonElement getValue(String path) {
         try {

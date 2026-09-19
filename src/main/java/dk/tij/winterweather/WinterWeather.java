@@ -10,6 +10,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 
 public class WinterWeather implements ModInitializer {
+    private static boolean modEnabled;
     private FreezeStateManager freezeState;
     private FreezeServerController freezeController;
     private FreezingConfig config;
@@ -19,6 +20,7 @@ public class WinterWeather implements ModInitializer {
     public void onInitialize() {
         config = FreezingConfig.load();
         enabled = config.enabled();
+        modEnabled = enabled;
 
         freezeState = new FreezeStateManager(new PlayerDataHandler());
         freezeController = new FreezeServerController(freezeState, () -> enabled);
@@ -29,6 +31,7 @@ public class WinterWeather implements ModInitializer {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+        modEnabled = enabled;
         if (FreezingConfig.setValue("enabled", Boolean.toString(enabled))) {
             config = FreezingConfig.load();
         }
@@ -39,6 +42,10 @@ public class WinterWeather implements ModInitializer {
     public void reload() {
         config = FreezingConfig.load();
         enabled = config.enabled();
+        modEnabled = enabled;
+    }
+    public static boolean modEnabled() {
+        return modEnabled;
     }
     public String configValue(String path) {
         var value = FreezingConfig.getValue(path);

@@ -4,6 +4,7 @@
   "package": "dk.tij.winterweather.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
+    "LivingEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1

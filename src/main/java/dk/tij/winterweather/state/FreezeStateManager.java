@@ -31,9 +31,9 @@ public final class FreezeStateManager {
         actualFreezeTicks.remove(uuid);
     }
 
-    public void accept(UUID uuid, double value, int maximum) {
+    public void accept(UUID uuid, double value) {
         if (Double.isFinite(value)) {
-            actualFreezeTicks.put(uuid, clamp(value, maximum));
+            actualFreezeTicks.put(uuid, Math.max(0, value));
         }
     }
 
@@ -56,7 +56,4 @@ public final class FreezeStateManager {
         playerData.save();
     }
 
-    public static double clamp(double value, int maximum) {
-        return Math.max(0, Math.min(maximum, value));
-    }
 }

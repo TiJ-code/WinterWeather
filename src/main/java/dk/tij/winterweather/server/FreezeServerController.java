@@ -27,7 +27,9 @@ public final class FreezeServerController {
 
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             applyFreezeState(player, config);
-            if (damageTick % 40 == 0 && player.getTicksFrozen() > 154 && wearsLeather(player)) {
+            if (damageTick % 40 == 0
+                    && state.get(player.getUUID()) > config.criticalFreezingTicks()
+                    && !wearsInsulatedArmor(player, config)) {
                 player.hurt(player.damageSources().freeze(), 1);
             }
             if (state.debug(player.getUUID())) {
@@ -42,11 +44,6 @@ public final class FreezeServerController {
     }
 
     private void applyFreezeState(ServerPlayer player, FreezingConfig config) {
-        if (!player.canFreeze()) {
-            player.clearFreeze();
-            return;
-        }
-
         int frozenTicks = config.toFrozenTicks(state.get(player.getUUID()));
         if (player.getTicksFrozen() > frozenTicks) {
             frozenTicks = player.getTicksFrozen();
@@ -54,12 +51,12 @@ public final class FreezeServerController {
         player.setTicksFrozen(Math.min(FreezingConfig.MAX_FROZEN_TICKS, frozenTicks));
     }
 
-    private static boolean wearsLeather(ServerPlayer player) {
+    private static boolean wearsInsulatedArmor(ServerPlayer player, FreezingConfig config) {
         for (EquipmentSlot slot : new EquipmentSlot[]{
                 EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
             ItemStack stack = player.getItemBySlot(slot);
             if (!stack.isEmpty()
-                    && BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath().startsWith("leather_")) {
+                    && config.isInsulatedArmor(BuiltInRegistries.ITEM.getKey(stack.getItem()))) {
                 return true;
             }
         }
