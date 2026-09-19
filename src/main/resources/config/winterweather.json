@@ -50,20 +50,38 @@
       }
     }
   },
-  "torches": {
+  "extinguishable_fire": {
     "enabled": true,
-    "burnout_seconds": 86400,
-    "weather_extinguishes": true,
     "use_unlit_state": true,
     "relight": {
       "flint_and_steel": true,
       "durability_cost": 1
     },
-    "torch_types": {
-      "minecraft:torch": true,
-      "minecraft:wall_torch": true,
-      "minecraft:soul_torch": true,
-      "minecraft:soul_wall_torch": true
+    "block_types": {
+      "minecraft:torch": {
+        "burnout_seconds": 10
+      },
+      "minecraft:wall_torch": {
+        "burnout_seconds": 86400
+      },
+      "minecraft:soul_torch": {
+        "burnout_seconds": 86400
+      },
+      "minecraft:soul_wall_torch": {
+        "burnout_seconds": 86400
+      },
+      "minecraft:copper_torch": {
+        "burnout_seconds": 86400
+      },
+      "minecraft:copper_wall_torch": {
+        "burnout_seconds": 86400
+      },
+      "minecraft:campfire": {
+        "burnout_seconds": 172800
+      },
+      "minecraft:soul_campfire": {
+        "burnout_seconds": 172800
+      }
     }
   }
 }

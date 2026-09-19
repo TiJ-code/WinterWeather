@@ -2,6 +2,7 @@ package dk.tij.winterweather.mixin;
 
 import dk.tij.winterweather.torch.TorchBlocks;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.TorchBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -27,6 +28,9 @@ public abstract class BlockMixin {
         BlockState state = callbackInfo.getReturnValue();
         if (state.getBlock() instanceof TorchBlock && state.hasProperty(TorchBlocks.LIT)) {
             callbackInfo.setReturnValue(state.setValue(TorchBlocks.LIT, false));
+        } else if (state.getBlock() instanceof CampfireBlock
+                && state.hasProperty(CampfireBlock.LIT)) {
+            callbackInfo.setReturnValue(state.setValue(CampfireBlock.LIT, false));
         }
     }
 }

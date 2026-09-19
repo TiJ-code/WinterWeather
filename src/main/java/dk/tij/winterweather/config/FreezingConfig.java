@@ -13,6 +13,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 public record FreezingConfig(
@@ -36,9 +38,8 @@ public record FreezingConfig(
         Function<Double, Double> interpolation,
         Map<Block, HeatSource> heatSources,
         Map<Identifier, Double> armorIsolation,
+        Map<Block, Integer> extinguishableBurnoutSeconds,
         boolean torchesEnabled,
-        int torchBurnoutSeconds,
-        boolean torchWeatherExtinguishes,
         boolean torchRelightingEnabled,
         int torchRelightDurabilityCost
 ) {
@@ -64,8 +65,17 @@ public record FreezingConfig(
         armor.put(Identifier.parse("minecraft:leather_leggings"), .30);
         armor.put(Identifier.parse("minecraft:leather_chestplate"), .40);
         armor.put(Identifier.parse("minecraft:leather_helmet"), .15);
+        Map<Block, Integer> extinguishable = new HashMap<>();
+        addExtinguishable(extinguishable, "minecraft:torch", 86400);
+        addExtinguishable(extinguishable, "minecraft:wall_torch", 86400);
+        addExtinguishable(extinguishable, "minecraft:soul_torch", 86400);
+        addExtinguishable(extinguishable, "minecraft:soul_wall_torch", 86400);
+        addExtinguishable(extinguishable, "minecraft:copper_torch", 86400);
+        addExtinguishable(extinguishable, "minecraft:copper_wall_torch", 86400);
+        addExtinguishable(extinguishable, "minecraft:campfire", 86400);
+        addExtinguishable(extinguishable, "minecraft:soul_campfire", 86400);
         return new FreezingConfig(false, 1800, 5, .8, 1.1, 1, Maths::smootherstep,
-                sources, armor, true, 86400, true, true, 1);
+                sources, armor, extinguishable, true, true, 1);
     }
 
     public static FreezingConfig load() {
@@ -103,6 +113,11 @@ public record FreezingConfig(
     private static void addSource(Map<Block, HeatSource> sources, String id, double heat, double radius) {
         BuiltInRegistries.BLOCK.get(Identifier.parse(id))
                 .ifPresent(holder -> sources.put(holder.value(), new HeatSource(heat, radius * radius)));
+    }
+
+    private static void addExtinguishable(Map<Block, Integer> blocks, String id, int seconds) {
+        BuiltInRegistries.BLOCK.get(Identifier.parse(id))
+                .ifPresent(holder -> blocks.put(holder.value(), seconds));
     }
 
     public double temperatureDelta(Level level, BlockPos playerBlockPos, Vec3 playerPos, Vec3 eyePos,
@@ -148,6 +163,14 @@ public record FreezingConfig(
         );
     }
 
+    public boolean isExtinguishable(BlockState state) {
+        return extinguishableBurnoutSeconds.containsKey(state.getBlock());
+    }
+
+    public int extinguishableBurnoutSeconds(BlockState state) {
+        return extinguishableBurnoutSeconds.getOrDefault(state.getBlock(), 0);
+    }
+
     private static FreezingConfig fromJson(JsonObject root) {
         JsonObject frost = object(root, "frost");
         Map<Block, HeatSource> sources = new HashMap<>();
@@ -176,6 +199,31 @@ public record FreezingConfig(
             case "smoothstep" -> Maths::smoothstep;
             default -> Maths::smootherstep;
         };
+        JsonObject fire = root.has("extinguishable_fire")
+                ? object(root, "extinguishable_fire")
+                : object(root, "torches");
+        Map<Block, Integer> extinguishable = new HashMap<>();
+        JsonObject configuredBlocks = object(fire, "block_types");
+        if (configuredBlocks.size() == 0) {
+            configuredBlocks = object(fire, "torch_types");
+        }
+        for (var entry : configuredBlocks.entrySet()) {
+            Identifier id = Identifier.tryParse(entry.getKey());
+            if (id == null) {
+                continue;
+            }
+            JsonElement value = entry.getValue();
+            if (value.isJsonObject()) {
+                addExtinguishable(extinguishable, id.toString(),
+                        positiveInt(value.getAsJsonObject(), "burnout_seconds", 86400));
+            } else if (value.isJsonPrimitive() && value.getAsBoolean()) {
+                addExtinguishable(extinguishable, id.toString(),
+                        positiveInt(fire, "burnout_seconds", 86400));
+            }
+        }
+        if (!root.has("extinguishable_fire") && !root.has("torches")) {
+            extinguishable = defaults().extinguishableBurnoutSeconds();
+        }
         return new FreezingConfig(
                 root.has("enabled") && root.get("enabled").getAsBoolean(),
                 positiveInt(frost, "critical_freezing_ticks", 1800),
@@ -183,12 +231,10 @@ public record FreezingConfig(
                 positive(object(frost, "isolation"), "max_possible_isolation", 80) / 100,
                 1 + positive(frost, "player_burning_boost", 10) / 100,
                 1 + positive(frost, "player_powder_snow_boost", 0) / 100,
-                interpolation, sources, armor,
-                booleanValue(object(root, "torches"), "enabled", true),
-                positiveInt(object(root, "torches"), "burnout_seconds", 86400),
-                booleanValue(object(root, "torches"), "weather_extinguishes", true),
-                booleanValue(object(object(root, "torches"), "relight"), "flint_and_steel", true),
-                positiveInt(object(object(root, "torches"), "relight"), "durability_cost", 1)
+                interpolation, sources, armor, extinguishable,
+                booleanValue(fire, "enabled", true),
+                booleanValue(object(fire, "relight"), "flint_and_steel", true),
+                positiveInt(object(fire, "relight"), "durability_cost", 1)
         );
     }
 

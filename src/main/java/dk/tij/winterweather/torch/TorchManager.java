@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.CampfireBlock;
 
 import java.util.function.Supplier;
 
@@ -18,8 +19,8 @@ public final class TorchManager {
     }
 
     public void registerPlacedTorch(ServerLevel level, BlockPos pos, BlockState state) {
-        if (config.get().torchesEnabled() && TorchBlocks.isTorch(state)) {
-            int burnoutTicks = burnoutTicks();
+        if (config.get().torchesEnabled() && isExtinguishable(state)) {
+            int burnoutTicks = burnoutTicks(state);
             if (burnoutTicks > 0) {
                 TorchData.get(level).set(pos, new TorchState(level.getGameTime() + burnoutTicks));
             }
@@ -31,23 +32,23 @@ public final class TorchManager {
     }
 
     public boolean extinguish(ServerLevel level, BlockPos pos, BlockState state) {
-        if (!config.get().torchesEnabled() || !TorchBlocks.isTorch(state) || !isLit(state)) {
+        if (!config.get().torchesEnabled() || !isExtinguishable(state) || !isLit(state)) {
             return false;
         }
 
-        level.setBlock(pos, state.setValue(TorchBlocks.LIT, false), 3);
+        level.setBlock(pos, withLit(state, false), 3);
         TorchData.get(level).set(pos, new TorchState(0));
         level.playSound(null, pos, SoundEvents.CANDLE_EXTINGUISH, SoundSource.BLOCKS, 1, 1);
         return true;
     }
 
     public boolean relight(ServerLevel level, BlockPos pos, BlockState state) {
-        if (!config.get().torchesEnabled() || !TorchBlocks.isTorch(state) || isLit(state)) {
+        if (!config.get().torchesEnabled() || !isExtinguishable(state) || isLit(state)) {
             return false;
         }
 
-        level.setBlock(pos, state.setValue(TorchBlocks.LIT, true), 11);
-        int burnoutTicks = burnoutTicks();
+        level.setBlock(pos, withLit(state, true), 11);
+        int burnoutTicks = burnoutTicks(state);
         if (burnoutTicks > 0) {
             TorchData.get(level).set(pos, new TorchState(level.getGameTime() + burnoutTicks));
         }
@@ -64,27 +65,36 @@ public final class TorchManager {
         for (var entry : new java.util.ArrayList<>(data.entries())) {
             BlockPos pos = BlockPos.of(entry.getKey());
             BlockState state = level.getBlockState(pos);
-            if (!TorchBlocks.isTorch(state)) {
+            if (!isExtinguishable(state)) {
                 data.remove(pos);
                 continue;
             }
 
             if (isLit(state) && entry.getValue().isExpired(level.getGameTime())) {
                 extinguish(level, pos, state);
-            } else if (isLit(state) && config.get().torchWeatherExtinguishes()
-                    && level.isRainingAt(pos) && level.canSeeSky(pos)) {
-                extinguish(level, pos, state);
             }
         }
     }
 
     public static boolean isLit(BlockState state) {
-        return !state.hasProperty(TorchBlocks.LIT)
-                || state.getValue(TorchBlocks.LIT);
+        if (state.hasProperty(TorchBlocks.LIT)) {
+            return state.getValue(TorchBlocks.LIT);
+        }
+        return !state.hasProperty(CampfireBlock.LIT) || state.getValue(CampfireBlock.LIT);
     }
 
-    private int burnoutTicks() {
-        return Math.max(0, config.get().torchBurnoutSeconds()) * 20;
+    private static BlockState withLit(BlockState state, boolean lit) {
+        if (state.hasProperty(TorchBlocks.LIT)) {
+            return state.setValue(TorchBlocks.LIT, lit);
+        }
+        if (state.hasProperty(CampfireBlock.LIT)) {
+            return state.setValue(CampfireBlock.LIT, lit);
+        }
+        return state;
+    }
+
+    private int burnoutTicks(BlockState state) {
+        return Math.max(0, config.get().extinguishableBurnoutSeconds(state)) * 20;
     }
 
     public int relightDurabilityCost() {
@@ -93,5 +103,9 @@ public final class TorchManager {
 
     public boolean relightingEnabled() {
         return config.get().torchRelightingEnabled();
+    }
+
+    public boolean isExtinguishable(BlockState state) {
+        return config.get().isExtinguishable(state);
     }
 }
