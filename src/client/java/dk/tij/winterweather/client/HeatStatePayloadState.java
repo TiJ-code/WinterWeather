@@ -1,22 +1,27 @@
 package dk.tij.winterweather.client;
 
 final class HeatStatePayloadState {
-    private static boolean nearHeatSource;
+    private static double actualFreezeTicks;
     private static boolean initialized;
 
     private HeatStatePayloadState() {
     }
 
-    static boolean matches(boolean value) {
-        return initialized && nearHeatSource == value;
+    static double actualFreezeTicks() {
+        return actualFreezeTicks;
     }
 
-    static void update(boolean value) {
-        nearHeatSource = value;
+    static void update(double value) {
+        actualFreezeTicks = value;
         initialized = true;
     }
 
     static void reset() {
+        actualFreezeTicks = 0;
         initialized = false;
+    }
+
+    static boolean initialized() {
+        return initialized;
     }
 }

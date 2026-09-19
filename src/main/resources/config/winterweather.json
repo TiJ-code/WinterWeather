@@ -1,14 +1,53 @@
 {
-  "freeze_rate": 1,
-  "thaw_rate": 2,
-  "heat_sources": {
-    "minecraft:torch": 8.0,
-    "minecraft:wall_torch": 8.0,
-    "minecraft:campfire": 8.0,
-    "minecraft:soul_campfire": 8.0,
-    "minecraft:fire": 5.0,
-    "minecraft:soul_fire": 5.0,
-    "minecraft:lava": 6.0,
-    "minecraft:magma_block": 3.0
+  "enabled": false,
+  "frost": {
+    "critical_freezing_ticks": 1800,
+    "player_radius": 5.0,
+    "interpolation_function": "smootherstep",
+    "player_burning_boost": 10,
+    "player_powder_snow_boost": 0,
+    "isolation": {
+      "max_possible_isolation": 80,
+      "armor_pieces": {
+        "minecraft:leather_boots": 15,
+        "minecraft:leather_leggings": 30,
+        "minecraft:leather_chestplate": 40,
+        "minecraft:leather_helmet": 15
+      }
+    },
+    "heat_sources": {
+      "minecraft:torch": {
+        "value": 1.0,
+        "radius": 3.0
+      },
+      "minecraft:wall_torch": {
+        "value": 1.0,
+        "radius": 3.0
+      },
+      "minecraft:campfire": {
+        "value": 2.0,
+        "radius": 3.0
+      },
+      "minecraft:soul_campfire": {
+        "value": 2.0,
+        "radius": 3.0
+      },
+      "minecraft:fire": {
+        "value": 3.0,
+        "radius": 5.0
+      },
+      "minecraft:soul_fire": {
+        "value": 3.0,
+        "radius": 5.0
+      },
+      "minecraft:lava": {
+        "value": 3.0,
+        "radius": 7.0
+      },
+      "minecraft:lantern": {
+        "value": 1.0,
+        "radius": 3.0
+      }
+    }
   }
 }
