@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "fabric-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Make Gradle Executable
+        run: chmod +x gradlew
+
+      - name: Build
+        run: ./gradlew build
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            build/libs/*.jar \
+            --title "${{ github.ref_name }}" \
+            --generate-notes
+
