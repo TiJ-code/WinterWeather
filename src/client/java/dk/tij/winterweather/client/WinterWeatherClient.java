@@ -1,6 +1,7 @@
 package dk.tij.winterweather.client;
 
 import dk.tij.winterweather.config.FreezingConfig;
+import dk.tij.winterweather.network.ConfigPayload;
 import dk.tij.winterweather.network.HeatStatePayload;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -14,20 +15,28 @@ import java.util.ArrayList;
 public class WinterWeatherClient implements ClientModInitializer {
     private static final int REPORT_INTERVAL_TICKS = 100;
 
+    private FreezingConfig config;
+
     @Override
     public void onInitializeClient() {
-        FreezingConfig config = FreezingConfig.load();
         ClientPlayNetworking.registerGlobalReceiver(HeatStatePayload.TYPE, (payload, context) ->
                 context.client().execute(() -> HeatStatePayloadState.updateFromServer(
                         payload.enabled(), Math.max(0, payload.actualFreezeTicks()))));
+
+        ClientPlayNetworking.registerGlobalReceiver(ConfigPayload.TYPE, (payload, context) ->
+                context.client().execute(() -> config = payload.toConfig()));
+
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player == null || client.level == null) {
                 HeatStatePayloadState.reset();
                 return;
             }
 
-            if (!config.enabled()
-                    || !HeatStatePayloadState.initialized()
+            if (config == null) {
+                return;
+            }
+
+            if (!HeatStatePayloadState.initialized()
                     || !HeatStatePayloadState.serverEnabled()) {
                 return;
             }

@@ -6,7 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
-import dk.tij.winterweather.utils.Maths;
+import dk.tij.winterweather.utils.InterpolationFunctions;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -25,7 +25,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 
 public record FreezingConfig(
@@ -35,7 +34,7 @@ public record FreezingConfig(
         double maxPossibleIsolation,
         double playerBurningBoost,
         double playerPowderSnowBoost,
-        Function<Double, Double> interpolation,
+        InterpolationFunctions interpolation,
         Map<Block, HeatSource> heatSources,
         Map<Identifier, Double> armorIsolation,
         Map<Block, Integer> extinguishableBurnoutSeconds,
@@ -65,6 +64,7 @@ public record FreezingConfig(
         armor.put(Identifier.parse("minecraft:leather_leggings"), .30);
         armor.put(Identifier.parse("minecraft:leather_chestplate"), .40);
         armor.put(Identifier.parse("minecraft:leather_helmet"), .15);
+
         Map<Block, Integer> extinguishable = new HashMap<>();
         addExtinguishable(extinguishable, "minecraft:torch", 86400);
         addExtinguishable(extinguishable, "minecraft:wall_torch", 86400);
@@ -74,8 +74,22 @@ public record FreezingConfig(
         addExtinguishable(extinguishable, "minecraft:copper_wall_torch", 86400);
         addExtinguishable(extinguishable, "minecraft:campfire", 86400);
         addExtinguishable(extinguishable, "minecraft:soul_campfire", 86400);
-        return new FreezingConfig(false, 1800, 5, .8, 1.1, 1, Maths::smootherstep,
-                sources, armor, extinguishable, true, true, 1);
+
+        return new FreezingConfig(
+                false,
+                1800,
+                5,
+                .8,
+                1.1,
+                1,
+                InterpolationFunctions.SMOOTHERSTEP,
+                sources,
+                armor,
+                extinguishable,
+                true,
+                true,
+                1
+        );
     }
 
     public static FreezingConfig load() {
@@ -194,11 +208,8 @@ public record FreezingConfig(
         }
 
         String interpolationName = string(frost, "interpolation_function", "smootherstep");
-        Function<Double, Double> interpolation = switch (interpolationName) {
-            case "linear" -> value -> value;
-            case "smoothstep" -> Maths::smoothstep;
-            default -> Maths::smootherstep;
-        };
+        InterpolationFunctions interpolation = InterpolationFunctions.by(interpolationName);
+
         JsonObject fire = root.has("extinguishable_fire")
                 ? object(root, "extinguishable_fire")
                 : object(root, "torches");
