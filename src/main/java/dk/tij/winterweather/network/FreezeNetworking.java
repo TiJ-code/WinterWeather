@@ -16,6 +16,8 @@ public final class FreezeNetworking {
     public static void register(FreezeStateManager state, FreezingConfigProvider config) {
         PayloadTypeRegistry.serverboundPlay().register(HeatStatePayload.TYPE, HeatStatePayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(HeatStatePayload.TYPE, HeatStatePayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ConfigPayload.TYPE, ConfigPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ConfigPayload.TYPE, ConfigPayload.CODEC);
 
         ServerPlayNetworking.registerGlobalReceiver(HeatStatePayload.TYPE, (payload, context) ->
                 context.server().execute(() -> {
@@ -48,6 +50,7 @@ public final class FreezeNetworking {
     private static void sendState(ServerPlayer player, FreezeStateManager state, FreezingConfig config) {
         ServerPlayNetworking.send(player,
                 new HeatStatePayload(config.enabled(), state.get(player.getUUID())));
+        ServerPlayNetworking.send(player, ConfigPayload.from(config));
     }
 
     public interface FreezingConfigProvider {
