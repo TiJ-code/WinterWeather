@@ -1,7 +1,7 @@
 {
-  "enabled": false,
+  "enabled": true,
   "frost": {
-    "critical_freezing_ticks": 1800,
+    "critical_freezing_ticks": 500,
     "player_radius": 5.0,
     "interpolation_function": "smootherstep",
     "player_burning_boost": 10,
@@ -26,7 +26,7 @@
       },
       "minecraft:campfire": {
         "value": 2.0,
-        "radius": 3.0
+        "radius": 5.0
       },
       "minecraft:soul_campfire": {
         "value": 2.0,
@@ -38,7 +38,7 @@
       },
       "minecraft:soul_fire": {
         "value": 3.0,
-        "radius": 5.0
+        "radius": 3.0
       },
       "minecraft:lava": {
         "value": 3.0,
@@ -46,7 +46,7 @@
       },
       "minecraft:lantern": {
         "value": 1.0,
-        "radius": 3.0
+        "radius": 2.0
       }
     }
   },
@@ -59,28 +59,28 @@
     },
     "block_types": {
       "minecraft:torch": {
-        "burnout_seconds": 86400
+        "burnout_seconds": 300
       },
       "minecraft:wall_torch": {
-        "burnout_seconds": 86400
+        "burnout_seconds": 300
       },
       "minecraft:soul_torch": {
-        "burnout_seconds": 86400
+        "burnout_seconds": 3000
       },
       "minecraft:soul_wall_torch": {
-        "burnout_seconds": 86400
+        "burnout_seconds": 3000
       },
       "minecraft:copper_torch": {
-        "burnout_seconds": 86400
+        "burnout_seconds": 600
       },
       "minecraft:copper_wall_torch": {
-        "burnout_seconds": 86400
+        "burnout_seconds": 600
       },
       "minecraft:campfire": {
-        "burnout_seconds": 172800
+        "burnout_seconds": 600
       },
       "minecraft:soul_campfire": {
-        "burnout_seconds": 172800
+        "burnout_seconds": 3000
       }
     }
   }
