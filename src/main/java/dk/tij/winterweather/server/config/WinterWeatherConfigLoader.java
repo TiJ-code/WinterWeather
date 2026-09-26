@@ -166,6 +166,14 @@ public final class WinterWeatherConfigLoader {
                 getRequiredBoolean(json, "extinguishable");
         boolean useUnlitState =
                 getRequiredBoolean(json, "use_unlit_state");
+        double glowstoneDurationMultiplier = json.has("glowstone_duration_multiplier")
+                ? getRequiredDouble(json, "glowstone_duration_multiplier")
+                : 10d;
+        if (glowstoneDurationMultiplier < 1d || glowstoneDurationMultiplier > 1000d) {
+            throw new ConfigParseException(
+                    "Property \"glowstone_duration_multiplier\" must be between 1 and 1000."
+            );
+        }
         JsonObject relightJson =
                 getRequiredObject(json, "relight");
         HeatSourcesConfig.RelightConfig relight =
@@ -194,7 +202,8 @@ public final class WinterWeatherConfigLoader {
                 extinguishable,
                 useUnlitState,
                 relight,
-                List.copyOf(blocks)
+                List.copyOf(blocks),
+                glowstoneDurationMultiplier
         );
     }
 
@@ -400,6 +409,10 @@ public final class WinterWeatherConfigLoader {
         json.addProperty(
                 "use_unlit_state",
                 config.useUnlitState()
+        );
+        json.addProperty(
+                "glowstone_duration_multiplier",
+                config.glowstoneDurationMultiplier()
         );
         JsonObject relight = new JsonObject();
         relight.addProperty(

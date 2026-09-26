@@ -10,12 +10,14 @@ import java.util.List;
  * @param useUnlitState  the use unlit state value
  * @param relight        the relight value
  * @param blocks         the blocks value
+ * @param glowstoneDurationMultiplier glowstone duration multiplier
  */
 public record HeatSourcesConfig(
         boolean extinguishable,
         boolean useUnlitState,
         RelightConfig relight,
-        List<HeatSourceConfig> blocks
+        List<HeatSourceConfig> blocks,
+        double glowstoneDurationMultiplier
 ) {
     /**
      * Configuration values for relight.

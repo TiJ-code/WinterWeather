@@ -47,7 +47,8 @@ public record ConfigPayload(
         boolean heatSourcesEnabled,
         boolean useUnlitState,
         boolean heatSourceRelightingEnabled,
-        int heatSourceRelightDurabilityCost
+        int heatSourceRelightDurabilityCost,
+        double glowstoneDurationMultiplier
 ) implements CustomPacketPayload {
     public static final Type<ConfigPayload> TYPE =
             new Type<>(Identifier.parse("winterweather:config"));
@@ -117,6 +118,7 @@ public record ConfigPayload(
                         BOOL_CODEC.encode(buffer, payload.useUnlitState());
                         BOOL_CODEC.encode(buffer, payload.heatSourceRelightingEnabled());
                         INT_CODEC.encode(buffer, payload.heatSourceRelightDurabilityCost());
+                        DOUBLE_CODEC.encode(buffer, payload.glowstoneDurationMultiplier());
                     },
                     buffer -> new ConfigPayload(
                             BOOL_CODEC.decode(buffer),
@@ -131,7 +133,8 @@ public record ConfigPayload(
                             BOOL_CODEC.decode(buffer),
                             BOOL_CODEC.decode(buffer),
                             BOOL_CODEC.decode(buffer),
-                            INT_CODEC.decode(buffer)
+                            INT_CODEC.decode(buffer),
+                            DOUBLE_CODEC.decode(buffer)
                     )
             );
 
@@ -154,7 +157,8 @@ public record ConfigPayload(
                 config.heatSourcesEnabled(),
                 config.useUnlitState(),
                 config.heatSourceRelightingEnabled(),
-                config.heatSourceRelightDurabilityCost()
+                config.heatSourceRelightDurabilityCost(),
+                config.glowstoneDurationMultiplier()
         );
     }
 
@@ -175,7 +179,8 @@ public record ConfigPayload(
                 heatSourcesEnabled,
                 useUnlitState,
                 heatSourceRelightingEnabled,
-                heatSourceRelightDurabilityCost
+                heatSourceRelightDurabilityCost,
+                glowstoneDurationMultiplier
         );
     }
 

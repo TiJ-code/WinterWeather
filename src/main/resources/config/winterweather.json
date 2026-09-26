@@ -19,6 +19,7 @@
     "heat_sources": {
       "extinguishable": true,
       "use_unlit_state": true,
+      "glowstone_duration_multiplier": 10,
       "relight": {
         "flint_and_steel": true,
         "durability_cost": 1

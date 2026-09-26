@@ -7,14 +7,19 @@ package dk.tij.winterweather.heat;
  * @param locked        the locked value
  * @param suppressSmoke the suppress smoke value
  */
-public record HeatSourceState(long extinguishAt, boolean locked, boolean suppressSmoke) {
+public record HeatSourceState(long extinguishAt, boolean locked, boolean suppressSmoke,
+                              boolean glowstoneBoosted) {
+    public HeatSourceState(long extinguishAt, boolean locked, boolean suppressSmoke) {
+        this(extinguishAt, locked, suppressSmoke, false);
+    }
+
     /**
      * Performs the heat source state operation.
      *
      * @param extinguishAt the extinguish at value
      */
     public HeatSourceState(long extinguishAt) {
-        this(extinguishAt, false, false);
+        this(extinguishAt, false, false, false);
     }
 
     /**
@@ -24,7 +29,7 @@ public record HeatSourceState(long extinguishAt, boolean locked, boolean suppres
      * @param locked       the locked value
      */
     public HeatSourceState(long extinguishAt, boolean locked) {
-        this(extinguishAt, locked, false);
+        this(extinguishAt, locked, false, false);
     }
 
     /**
@@ -76,6 +81,10 @@ public record HeatSourceState(long extinguishAt, boolean locked, boolean suppres
      * @param suppressSmoke the suppress smoke value
      */
     public HeatSourceState withSmokeSuppressed(boolean suppressSmoke) {
-        return new HeatSourceState(extinguishAt, locked, suppressSmoke);
+        return new HeatSourceState(extinguishAt, locked, suppressSmoke, glowstoneBoosted);
+    }
+
+    public HeatSourceState withGlowstoneBoosted(long newExtinguishAt) {
+        return new HeatSourceState(newExtinguishAt, locked, suppressSmoke, true);
     }
 }

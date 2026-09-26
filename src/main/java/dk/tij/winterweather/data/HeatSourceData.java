@@ -22,14 +22,16 @@ public final class HeatSourceData extends SavedData {
             Codec.LONG.fieldOf("pos").forGetter(Entry::pos),
             Codec.LONG.fieldOf("extinguish_at").forGetter(Entry::extinguishAt),
             Codec.BOOL.optionalFieldOf("locked", false).forGetter(Entry::locked),
-            Codec.BOOL.optionalFieldOf("suppress_smoke", false).forGetter(Entry::suppressSmoke)
+            Codec.BOOL.optionalFieldOf("suppress_smoke", false).forGetter(Entry::suppressSmoke),
+            Codec.BOOL.optionalFieldOf("glowstone_boosted", false).forGetter(Entry::glowstoneBoosted)
     ).apply(instance, Entry::new));
     private static final Codec<HeatSourceData> CODEC = ENTRY_CODEC.listOf()
             .xmap(HeatSourceData::new, data -> data.entries().stream()
                     .map(entry -> new Entry(
                             entry.getKey(),
                             entry.getValue().extinguishAt(),
-                            entry.getValue().locked(), entry.getValue().suppressSmoke()))
+                            entry.getValue().locked(), entry.getValue().suppressSmoke(),
+                            entry.getValue().glowstoneBoosted()))
                     .toList());
     private static final SavedDataType<HeatSourceData> TYPE = new SavedDataType<>(
             Identifier.parse("winterweather/torches"),
@@ -51,7 +53,8 @@ public final class HeatSourceData extends SavedData {
      */
     private HeatSourceData(java.util.List<Entry> entries) {
         for (Entry entry : entries) {
-            this.entries.put(entry.pos(), new HeatSourceState(entry.extinguishAt(), entry.locked(), entry.suppressSmoke()));
+            this.entries.put(entry.pos(), new HeatSourceState(entry.extinguishAt(), entry.locked(),
+                    entry.suppressSmoke(), entry.glowstoneBoosted()));
         }
     }
 
@@ -109,6 +112,7 @@ public final class HeatSourceData extends SavedData {
     /**
      * Codec representation of one persisted heat source.
      */
-    private record Entry(long pos, long extinguishAt, boolean locked, boolean suppressSmoke) {
+    private record Entry(long pos, long extinguishAt, boolean locked, boolean suppressSmoke,
+                         boolean glowstoneBoosted) {
     }
 }
