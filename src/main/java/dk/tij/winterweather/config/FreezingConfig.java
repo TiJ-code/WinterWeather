@@ -94,7 +94,16 @@ public record FreezingConfig(
                                         heatSource(3.0, 5.0, 0, "minecraft:fire"),
                                         heatSource(3.0, 7.0, 0, "minecraft:soul_fire"),
                                         heatSource(6.0, 3.0, 0, "minecraft:lava"),
-                                        heatSource(1.0, 5.0, 0, "minecraft:lantern")
+                                        heatSource(1.0, 5.0, 0,
+                                                "minecraft:lantern",
+                                                "minecraft:copper_lantern",
+                                                "minecraft:exposed_copper_lantern",
+                                                "minecraft:weathered_copper_lantern",
+                                                "minecraft:oxidized_copper_lantern",
+                                                "minecraft:waxed_copper_lantern",
+                                                "minecraft:waxed_exposed_copper_lantern",
+                                                "minecraft:waxed_weathered_copper_lantern",
+                                                "minecraft:waxed_oxidized_copper_lantern")
                                 )
                         )
                 )

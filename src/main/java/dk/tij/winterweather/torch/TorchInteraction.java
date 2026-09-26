@@ -25,11 +25,12 @@ public final class TorchInteraction {
                                               InteractionHand hand, BlockHitResult hit) {
         BlockPos pos = hit.getBlockPos();
         BlockState state = level.getBlockState(pos);
-        if (!manager.isExtinguishable(state)) {
+        ItemStack held = player.getItemInHand(hand);
+        if (!manager.isExtinguishable(state)
+                && !(held.is(Items.FLINT_AND_STEEL) && manager.isRelightable(state))) {
             return InteractionResult.PASS;
         }
 
-        ItemStack held = player.getItemInHand(hand);
         if (held.is(Items.FLINT_AND_STEEL)) {
             if (!TorchManager.isLit(state) && manager.relightingEnabled()) {
                 if (!(level instanceof ServerLevel serverLevel)) {

@@ -8,6 +8,7 @@
     "BlockMixin",
     "TorchBlockMixin",
     "WallTorchBlockMixin",
+    "LanternBlockMixin",
     "BlockStateBaseMixin",
     "BlockLifecycleMixin",
     "CampfireBlockMixin",

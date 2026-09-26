@@ -67,7 +67,7 @@ public final class TorchManager {
     }
 
     public boolean relight(ServerLevel level, BlockPos pos, BlockState state) {
-        if (!config.get().torchesEnabled() || !isExtinguishable(state) || isLit(state)) {
+        if (!config.get().torchesEnabled() || !isRelightable(state) || isLit(state)) {
             return false;
         }
 
@@ -190,6 +190,11 @@ public final class TorchManager {
 
     public boolean isExtinguishable(BlockState state) {
         return config.get().isExtinguishable(state);
+    }
+
+    public boolean isRelightable(BlockState state) {
+        return isExtinguishable(state)
+                || (config.get().torchesEnabled() && state.hasProperty(TorchBlocks.LIT));
     }
 
     public boolean isLocked(ServerLevel level, BlockPos pos) {
