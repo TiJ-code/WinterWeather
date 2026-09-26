@@ -3,6 +3,7 @@ package dk.tij.winterweather.client;
 import dk.tij.winterweather.config.FreezingConfig;
 import dk.tij.winterweather.network.ConfigPayload;
 import dk.tij.winterweather.network.CampfireSmokePayload;
+import dk.tij.winterweather.network.DebugStatePayload;
 import dk.tij.winterweather.network.HeatStatePayload;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -13,10 +14,9 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.level.block.Blocks;
 
 import java.util.ArrayList;
+import net.minecraft.network.chat.Component;
 
 public class WinterWeatherClient implements ClientModInitializer {
-    private static final int REPORT_INTERVAL_TICKS = 100;
-
     private FreezingConfig config;
 
     @Override
@@ -29,6 +29,8 @@ public class WinterWeatherClient implements ClientModInitializer {
 
         ClientPlayNetworking.registerGlobalReceiver(ConfigPayload.TYPE, (payload, context) ->
                 context.client().execute(() -> config = payload.toConfig()));
+        ClientPlayNetworking.registerGlobalReceiver(DebugStatePayload.TYPE, (payload, context) ->
+                context.client().execute(() -> HeatStatePayloadState.updateDebug(payload.enabled())));
         ClientPlayNetworking.registerGlobalReceiver(CampfireSmokePayload.TYPE, (payload, context) ->
                 context.client().execute(() -> CampfireSmokeState.set(
                         payload.dimension(), payload.pos(), payload.suppressed())));
@@ -38,15 +40,8 @@ public class WinterWeatherClient implements ClientModInitializer {
                 HeatStatePayloadState.reset();
                 return;
             }
-
-            if (config == null) {
-                return;
-            }
-
-            if (!HeatStatePayloadState.initialized()
-                    || !HeatStatePayloadState.serverEnabled()) {
-                return;
-            }
+            if (config == null || !HeatStatePayloadState.initialized()
+                    || !HeatStatePayloadState.serverEnabled()) return;
 
             double temperatureDelta = config.temperatureDelta(
                     client.level,
@@ -65,9 +60,15 @@ public class WinterWeatherClient implements ClientModInitializer {
             double progress = Math.max(0,
                     HeatStatePayloadState.actualFreezeTicks() + temperatureDelta);
             HeatStatePayloadState.update(progress);
+            HeatStatePayloadState.updateVisualProgress(config.toFrozenProgress(progress));
 
-            if (client.level.getGameTime() % REPORT_INTERVAL_TICKS == 0
-                    && ClientPlayNetworking.canSend(HeatStatePayload.TYPE)) {
+            if (HeatStatePayloadState.debugEnabled()) {
+                client.player.sendOverlayMessage(Component.literal(String.format(
+                        "Freeze: %d ticks (%.2f internal)",
+                        config.toFrozenTicks(progress), progress)));
+            }
+
+            if (ClientPlayNetworking.canSend(HeatStatePayload.TYPE)) {
                 ClientPlayNetworking.send(new HeatStatePayload(true, progress));
             }
         });

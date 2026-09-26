@@ -78,6 +78,7 @@ public final class WinterCommand {
                                     ServerPlayer player = context.getSource().getPlayerOrException();
                                     boolean enabled = BoolArgumentType.getBool(context, "enabled");
                                     mod.freezeState().setDebug(player.getUUID(), enabled);
+                                    FreezeNetworking.sendDebugState(player, enabled);
                                     context.getSource().sendSuccess(() -> Component.literal("Debug: " + enabled), false);
                                     return 1;
                                 })))
@@ -197,6 +198,7 @@ public final class WinterCommand {
     private static int toggleDebug(ServerPlayer player, WinterWeather mod) {
         boolean value = !mod.freezeState().debug(player.getUUID());
         mod.freezeState().setDebug(player.getUUID(), value);
+        FreezeNetworking.sendDebugState(player, value);
         player.sendSystemMessage(Component.literal("Debug: " + value));
         return 1;
     }
