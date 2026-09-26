@@ -6,6 +6,15 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import dk.tij.winterweather.server.config.BlockConfig;
+import dk.tij.winterweather.server.config.ConfigParseException;
+import dk.tij.winterweather.server.config.FrostConfig;
+import dk.tij.winterweather.server.config.HeatSourceConfig;
+import dk.tij.winterweather.server.config.HeatSourceVariant;
+import dk.tij.winterweather.server.config.HeatSourcesConfig;
+import dk.tij.winterweather.server.config.IsolationConfig;
+import dk.tij.winterweather.server.config.WinterWeatherConfig;
+import dk.tij.winterweather.server.config.WinterWeatherConfigLoader;
 import dk.tij.winterweather.utils.InterpolationFunctions;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;
@@ -25,7 +34,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 public record FreezingConfig(
         boolean enabled,
@@ -35,10 +43,10 @@ public record FreezingConfig(
         double playerBurningBoost,
         double playerPowderSnowBoost,
         InterpolationFunctions interpolation,
-        Map<Block, HeatSource> heatSources,
+        Map<Block, BlockConfig> blocks,
         Map<Identifier, Double> armorIsolation,
-        Map<Block, Integer> extinguishableBurnoutSeconds,
         boolean torchesEnabled,
+        boolean useUnlitState,
         boolean torchRelightingEnabled,
         int torchRelightDurabilityCost
 ) {
@@ -49,46 +57,63 @@ public record FreezingConfig(
     private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("winterweather.json");
 
     private static FreezingConfig defaults() {
-        Map<Block, HeatSource> sources = new HashMap<>();
-        addSource(sources, "minecraft:torch", 1, 3);
-        addSource(sources, "minecraft:wall_torch", 1, 3);
-        addSource(sources, "minecraft:campfire", 2, 3);
-        addSource(sources, "minecraft:soul_campfire", 2, 3);
-        addSource(sources, "minecraft:fire", 3, 5);
-        addSource(sources, "minecraft:soul_fire", 3, 5);
-        addSource(sources, "minecraft:lava", 3, 7);
-        addSource(sources, "minecraft:lantern", 1, 3);
+        return from(defaultWinterWeatherConfig());
+    }
 
-        Map<Identifier, Double> armor = new HashMap<>();
-        armor.put(Identifier.parse("minecraft:leather_boots"), .15);
-        armor.put(Identifier.parse("minecraft:leather_leggings"), .30);
-        armor.put(Identifier.parse("minecraft:leather_chestplate"), .40);
-        armor.put(Identifier.parse("minecraft:leather_helmet"), .15);
-
-        Map<Block, Integer> extinguishable = new HashMap<>();
-        addExtinguishable(extinguishable, "minecraft:torch", 86400);
-        addExtinguishable(extinguishable, "minecraft:wall_torch", 86400);
-        addExtinguishable(extinguishable, "minecraft:soul_torch", 86400);
-        addExtinguishable(extinguishable, "minecraft:soul_wall_torch", 86400);
-        addExtinguishable(extinguishable, "minecraft:copper_torch", 86400);
-        addExtinguishable(extinguishable, "minecraft:copper_wall_torch", 86400);
-        addExtinguishable(extinguishable, "minecraft:campfire", 86400);
-        addExtinguishable(extinguishable, "minecraft:soul_campfire", 86400);
-
-        return new FreezingConfig(
+    private static WinterWeatherConfig defaultWinterWeatherConfig() {
+        return new WinterWeatherConfig(
                 false,
-                1800,
-                5,
-                .8,
-                1.1,
-                1,
-                InterpolationFunctions.SMOOTHERSTEP,
-                sources,
-                armor,
-                extinguishable,
-                true,
-                true,
-                1
+                new FrostConfig(
+                        1800,
+                        5,
+                        "smootherstep",
+                        10,
+                        0,
+                        new IsolationConfig(
+                                80,
+                                Map.of(
+                                        "minecraft:leather_boots", 15.0,
+                                        "minecraft:leather_leggings", 30.0,
+                                        "minecraft:leather_chestplate", 40.0,
+                                        "minecraft:leather_helmet", 15.0
+                                )
+                        ),
+                        new HeatSourcesConfig(
+                                true,
+                                true,
+                                new HeatSourcesConfig.RelightConfig(true, 1),
+                                List.of(
+                                        heatSource(1.0, 3.0, 300,
+                                                "minecraft:torch", "minecraft:wall_torch"),
+                                        heatSource(2.0, 3.0, 3000,
+                                                "minecraft:soul_torch", "minecraft:soul_wall_torch"),
+                                        heatSource(1.5, 3.5, 600,
+                                                "minecraft:copper_torch", "minecraft:copper_wall_torch"),
+                                        heatSource(2.0, 5.0, 300, "minecraft:campfire"),
+                                        heatSource(2.0, 6.0, 3000, "minecraft:soul_campfire"),
+                                        heatSource(3.0, 5.0, 0, "minecraft:fire"),
+                                        heatSource(3.0, 7.0, 0, "minecraft:soul_fire"),
+                                        heatSource(6.0, 3.0, 0, "minecraft:lava"),
+                                        heatSource(1.0, 5.0, 0, "minecraft:lantern")
+                                )
+                        )
+                )
+        );
+    }
+
+    private static HeatSourceConfig heatSource(
+            double value,
+            double radius,
+            int burnoutSeconds,
+            String... blockIds
+    ) {
+        return new HeatSourceConfig(
+                value,
+                radius,
+                burnoutSeconds,
+                java.util.Arrays.stream(blockIds)
+                        .map(HeatSourceVariant::new)
+                        .toList()
         );
     }
 
@@ -98,17 +123,67 @@ public record FreezingConfig(
                 Files.createDirectories(CONFIG_PATH.getParent());
                 try (InputStream input = FreezingConfig.class.getResourceAsStream("/config/winterweather.json")) {
                     if (input == null) {
-                        Files.writeString(CONFIG_PATH, GSON.toJson(defaults().toJson()));
+                        WinterWeatherConfigLoader.save(CONFIG_PATH, defaultWinterWeatherConfig());
                     } else {
                         Files.copy(input, CONFIG_PATH);
                     }
                 }
             }
-            return fromJson(JsonParser.parseString(Files.readString(CONFIG_PATH)).getAsJsonObject());
+            return from(WinterWeatherConfigLoader.load(CONFIG_PATH));
         } catch (Exception exception) {
             LOGGER.error("Could not load {}, using defaults", CONFIG_PATH, exception);
             return defaults();
         }
+    }
+
+    public static FreezingConfig from(WinterWeatherConfig config) {
+        FrostConfig frost = config.frost();
+        HeatSourcesConfig heatSources = frost.heatSources();
+
+        Map<Block, BlockConfig> blocks = new HashMap<>();
+        for (HeatSourceConfig source : heatSources.blocks()) {
+            boolean extinguishable = heatSources.extinguishable() && source.burnoutSeconds() > 0;
+            for (HeatSourceVariant variant : source.variants()) {
+                Identifier id = Identifier.tryParse(variant.blockId());
+                if (id == null || !BuiltInRegistries.BLOCK.containsKey(id)) {
+                    LOGGER.warn("Unknown heat source block id: {}", variant.blockId());
+                    continue;
+                }
+                BuiltInRegistries.BLOCK.get(id).ifPresent(holder -> blocks.put(
+                        holder.value(),
+                        new BlockConfig(
+                                source.value(),
+                                source.radius(),
+                                extinguishable,
+                                source.burnoutSeconds()
+                        )
+                ));
+            }
+        }
+
+        Map<Identifier, Double> armor = new HashMap<>();
+        for (var entry : frost.isolation().armorPieces().entrySet()) {
+            Identifier id = Identifier.tryParse(entry.getKey());
+            if (id != null) {
+                armor.put(id, Math.max(0, Math.min(1, entry.getValue() / 100)));
+            }
+        }
+
+        return new FreezingConfig(
+                config.enabled(),
+                Math.max(1, frost.criticalFreezingTicks()),
+                Math.max(0, frost.playerRadius()),
+                Math.max(0, frost.isolation().maxPossibleIsolation()) / 100,
+                1 + Math.max(0, frost.playerBurningBoost()) / 100,
+                1 + Math.max(0, frost.playerPowderSnowBoost()) / 100,
+                InterpolationFunctions.by(frost.interpolationFunction()),
+                Map.copyOf(blocks),
+                Map.copyOf(armor),
+                heatSources.extinguishable(),
+                heatSources.useUnlitState(),
+                heatSources.relight().flintAndSteel(),
+                Math.max(0, heatSources.relight().durabilityCost())
+        );
     }
 
     public static JsonElement getValue(String path) {
@@ -119,19 +194,9 @@ public record FreezingConfig(
                 current = current.getAsJsonObject().get(part);
             }
             return current;
-        } catch (IOException | IllegalStateException exception) {
+        } catch (IOException | IllegalStateException | ConfigParseException exception) {
             return null;
         }
-    }
-
-    private static void addSource(Map<Block, HeatSource> sources, String id, double heat, double radius) {
-        BuiltInRegistries.BLOCK.get(Identifier.parse(id))
-                .ifPresent(holder -> sources.put(holder.value(), new HeatSource(heat, radius * radius)));
-    }
-
-    private static void addExtinguishable(Map<Block, Integer> blocks, String id, int seconds) {
-        BuiltInRegistries.BLOCK.get(Identifier.parse(id))
-                .ifPresent(holder -> blocks.put(holder.value(), seconds));
     }
 
     public double temperatureDelta(Level level, BlockPos playerBlockPos, Vec3 playerPos, Vec3 eyePos,
@@ -142,11 +207,10 @@ public record FreezingConfig(
                 playerBlockPos.offset(-radius, -radius, -radius),
                 playerBlockPos.offset(radius, radius, radius))) {
             var state = level.getBlockState(candidate);
-            if (state.hasProperty(dk.tij.winterweather.torch.TorchBlocks.LIT)
-                    && !state.getValue(dk.tij.winterweather.torch.TorchBlocks.LIT)) {
+            if (!dk.tij.winterweather.torch.TorchManager.isLit(state)) {
                 continue;
             }
-            HeatSource source = heatSources.get(state.getBlock());
+            BlockConfig source = blocks.get(state.getBlock());
             if (source == null || candidate.getCenter().distanceToSqr(playerPos) > source.radiusSquared()) {
                 continue;
             }
@@ -178,93 +242,13 @@ public record FreezingConfig(
     }
 
     public boolean isExtinguishable(BlockState state) {
-        return extinguishableBurnoutSeconds.containsKey(state.getBlock());
+        BlockConfig config = blocks.get(state.getBlock());
+        return config != null && config.extinguishable();
     }
 
     public int extinguishableBurnoutSeconds(BlockState state) {
-        return extinguishableBurnoutSeconds.getOrDefault(state.getBlock(), 0);
-    }
-
-    private static FreezingConfig fromJson(JsonObject root) {
-        JsonObject frost = object(root, "frost");
-        Map<Block, HeatSource> sources = new HashMap<>();
-        JsonObject configuredSources = object(frost, "heat_sources");
-        for (var entry : configuredSources.entrySet()) {
-            Identifier id = Identifier.tryParse(entry.getKey());
-            JsonObject source = entry.getValue().isJsonObject() ? entry.getValue().getAsJsonObject() : null;
-            if (id == null || source == null || !BuiltInRegistries.BLOCK.containsKey(id)) continue;
-            double heat = positive(source, "value", 1);
-            double radius = positive(source, "radius", 3);
-            BuiltInRegistries.BLOCK.get(id).ifPresent(holder ->
-                    sources.put(holder.value(), new HeatSource(heat, radius * radius)));
-        }
-        if (sources.isEmpty()) return defaults();
-
-        Map<Identifier, Double> armor = new HashMap<>();
-        JsonObject armorObject = object(object(frost, "isolation"), "armor_pieces");
-        for (var entry : armorObject.entrySet()) {
-            Identifier id = Identifier.tryParse(entry.getKey());
-            if (id != null) armor.put(id, Math.max(0, Math.min(1, entry.getValue().getAsDouble() / 100)));
-        }
-
-        String interpolationName = string(frost, "interpolation_function", "smootherstep");
-        InterpolationFunctions interpolation = InterpolationFunctions.by(interpolationName);
-
-        JsonObject fire = root.has("extinguishable_fire")
-                ? object(root, "extinguishable_fire")
-                : object(root, "torches");
-        Map<Block, Integer> extinguishable = new HashMap<>();
-        JsonObject configuredBlocks = object(fire, "block_types");
-        if (configuredBlocks.size() == 0) {
-            configuredBlocks = object(fire, "torch_types");
-        }
-        for (var entry : configuredBlocks.entrySet()) {
-            Identifier id = Identifier.tryParse(entry.getKey());
-            if (id == null) {
-                continue;
-            }
-            JsonElement value = entry.getValue();
-            if (value.isJsonObject()) {
-                addExtinguishable(extinguishable, id.toString(),
-                        positiveInt(value.getAsJsonObject(), "burnout_seconds", 86400));
-            } else if (value.isJsonPrimitive() && value.getAsBoolean()) {
-                addExtinguishable(extinguishable, id.toString(),
-                        positiveInt(fire, "burnout_seconds", 86400));
-            }
-        }
-        if (!root.has("extinguishable_fire") && !root.has("torches")) {
-            extinguishable = defaults().extinguishableBurnoutSeconds();
-        }
-        return new FreezingConfig(
-                root.has("enabled") && root.get("enabled").getAsBoolean(),
-                positiveInt(frost, "critical_freezing_ticks", 1800),
-                positive(frost, "player_radius", 5),
-                positive(object(frost, "isolation"), "max_possible_isolation", 80) / 100,
-                1 + positive(frost, "player_burning_boost", 10) / 100,
-                1 + positive(frost, "player_powder_snow_boost", 0) / 100,
-                interpolation, sources, armor, extinguishable,
-                booleanValue(fire, "enabled", true),
-                booleanValue(object(fire, "relight"), "flint_and_steel", true),
-                positiveInt(object(fire, "relight"), "durability_cost", 1)
-        );
-    }
-
-    private static JsonObject object(JsonObject parent, String key) {
-        JsonElement element = parent.get(key);
-        return element != null && element.isJsonObject() ? element.getAsJsonObject() : new JsonObject();
-    }
-    private static String string(JsonObject object, String key, String fallback) {
-        return object.has(key) ? object.get(key).getAsString() : fallback;
-    }
-    private static double positive(JsonObject object, String key, double fallback) {
-        return object.has(key) ? Math.max(0, object.get(key).getAsDouble()) : fallback;
-    }
-    private static int positiveInt(JsonObject object, String key, int fallback) {
-        return (int) positive(object, key, fallback);
-    }
-
-    private static boolean booleanValue(JsonObject object, String key, boolean fallback) {
-        return object.has(key) ? object.get(key).getAsBoolean() : fallback;
+        BlockConfig config = blocks.get(state.getBlock());
+        return config == null ? 0 : config.burnoutSeconds();
     }
 
     public static boolean setValue(String path, String rawValue) {
@@ -303,32 +287,5 @@ public record FreezingConfig(
 
     public boolean isInsulatedArmor(Identifier item) {
         return armorIsolation.containsKey(item);
-    }
-
-    private JsonObject toJson() {
-        JsonObject root = new JsonObject();
-        root.addProperty("enabled", enabled);
-        JsonObject frost = new JsonObject();
-        frost.addProperty("critical_freezing_ticks", criticalFreezingTicks);
-        frost.addProperty("player_radius", playerRadius);
-        frost.addProperty("interpolation_function", "smootherstep");
-        frost.addProperty("player_burning_boost", (playerBurningBoost - 1) * 100);
-        frost.addProperty("player_powder_snow_boost", (playerPowderSnowBoost - 1) * 100);
-        JsonObject isolation = new JsonObject();
-        isolation.addProperty("max_possible_isolation", maxPossibleIsolation * 100);
-        JsonObject armor = new JsonObject();
-        for (var entry : armorIsolation.entrySet()) armor.addProperty(entry.getKey().toString(), entry.getValue() * 100);
-        isolation.add("armor_pieces", armor);
-        frost.add("isolation", isolation);
-        JsonObject sources = new JsonObject();
-        for (var entry : heatSources.entrySet()) {
-            JsonObject source = new JsonObject();
-            source.addProperty("value", entry.getValue().heat());
-            source.addProperty("radius", Math.sqrt(entry.getValue().radiusSquared()));
-            sources.add(BuiltInRegistries.BLOCK.getKey(entry.getKey()).toString(), source);
-        }
-        frost.add("heat_sources", sources);
-        root.add("frost", frost);
-        return root;
     }
 }

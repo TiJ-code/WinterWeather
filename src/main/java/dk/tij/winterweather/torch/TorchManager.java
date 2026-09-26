@@ -19,16 +19,29 @@ public final class TorchManager {
     }
 
     public void registerPlacedTorch(ServerLevel level, BlockPos pos, BlockState state) {
-        if (config.get().torchesEnabled() && isExtinguishable(state)) {
-            TorchData data = TorchData.get(level);
-            if (data.get(pos) != null) {
-                return;
-            }
+        if (!config.get().torchesEnabled() || !isExtinguishable(state)) {
+            return;
+        }
+
+        TorchData data = TorchData.get(level);
+        if (data.get(pos) != null) {
+            return;
+        }
+
+        if (config.get().useUnlitState()) {
             BlockState unlitState = unlitState(state);
             if (unlitState != state) {
                 level.setBlock(pos, unlitState, 3);
                 state = unlitState;
             }
+            data.set(pos, new TorchState(0));
+            return;
+        }
+
+        int burnoutTicks = burnoutTicks(state);
+        if (burnoutTicks > 0 && isLit(state)) {
+            data.set(pos, new TorchState(level.getGameTime() + burnoutTicks));
+        } else {
             data.set(pos, new TorchState(0));
         }
     }

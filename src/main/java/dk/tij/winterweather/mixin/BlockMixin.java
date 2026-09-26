@@ -30,7 +30,7 @@ public abstract class BlockMixin {
     ) {
         BlockState state = callbackInfo.getReturnValue();
         var manager = WinterWeather.torchManagerOrNull();
-        if (manager != null && manager.isExtinguishable(state)) {
+        if (manager != null && manager.isExtinguishable(state) && WinterWeather.useUnlitState()) {
             callbackInfo.setReturnValue(TorchManager.withLit(state, false));
         }
     }
