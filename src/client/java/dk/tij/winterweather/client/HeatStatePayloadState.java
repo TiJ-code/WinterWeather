@@ -1,15 +1,43 @@
 package dk.tij.winterweather.client;
 
+
+/**
+ * Represents the current heat state payload state.
+ */
 public final class HeatStatePayloadState {
-    private static double actualFreezeTicks;
-    private static float visualFrom;
-    private static float visualTo;
-    private static long visualTransitionStartedNanos;
     private static final long VISUAL_TRANSITION_NANOS = 50_000_000L;
+    /**
+     * Stores the actual freeze ticks value.
+     */
+    private static double actualFreezeTicks;
+    /**
+     * Stores the visual from value.
+     */
+    private static float visualFrom;
+    /**
+     * Stores the visual to value.
+     */
+    private static float visualTo;
+    /**
+     * Stores the visual transition started nanos value.
+     */
+    private static long visualTransitionStartedNanos;
+    /**
+     * Stores the server enabled value.
+     */
     private static boolean serverEnabled;
+    /**
+     * Stores the debug enabled value.
+     */
     private static boolean debugEnabled;
+    /**
+     * Stores the initialized value.
+     */
     private static boolean initialized;
 
+    /**
+     * Performs the heat state payload state operation.
+     */
     private HeatStatePayloadState() {
     }
 
@@ -42,10 +70,18 @@ public final class HeatStatePayloadState {
         visualTransitionStartedNanos = now;
     }
 
+    /**
+     * Performs the visual progress operation.
+     */
     public static float visualProgress() {
         return interpolatedVisualProgress(System.nanoTime());
     }
 
+    /**
+     * Performs the interpolated visual progress operation.
+     *
+     * @param now the now value
+     */
     private static float interpolatedVisualProgress(long now) {
         float amount = Math.clamp((float) (now - visualTransitionStartedNanos)
                 / VISUAL_TRANSITION_NANOS, 0, 1);
@@ -62,10 +98,16 @@ public final class HeatStatePayloadState {
         initialized = false;
     }
 
+    /**
+     * Performs the server enabled operation.
+     */
     public static boolean serverEnabled() {
         return serverEnabled;
     }
 
+    /**
+     * Performs the initialized operation.
+     */
     public static boolean initialized() {
         return initialized;
     }

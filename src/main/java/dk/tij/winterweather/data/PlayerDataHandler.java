@@ -16,12 +16,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Loads and saves per-player freeze progress and debug preferences.
+ */
 public final class PlayerDataHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger("WinterWeather");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private final Path path = FabricLoader.getInstance().getConfigDir().resolve("winterweather-playerdata.json");
     private final Map<UUID, PlayerData> data = new HashMap<>();
 
+    /**
+     * Loads player data from the config directory, clearing it if the file is invalid.
+     */
     public void load() {
         if (Files.notExists(path)) return;
         try {
@@ -44,6 +50,9 @@ public final class PlayerDataHandler {
         }
     }
 
+    /**
+     * Writes all player data to the config directory.
+     */
     public void save() {
         try {
             Files.createDirectories(path.getParent());
@@ -62,24 +71,53 @@ public final class PlayerDataHandler {
         }
     }
 
+    /**
+     * Gets a player's persisted freeze progress.
+     *
+     * @param uuid player identifier
+     * @return stored freeze ticks, or zero when absent
+     */
     public double freezeTicks(UUID uuid) {
         return data.getOrDefault(uuid, new PlayerData(0, false)).actualFreezeTicks();
     }
 
+    /**
+     * Updates a player's freeze progress while retaining their debug setting.
+     *
+     * @param uuid  player identifier
+     * @param value freeze ticks to store
+     */
     public void setFreezeTicks(UUID uuid, double value) {
         PlayerData previous = data.getOrDefault(uuid, new PlayerData(0, false));
         data.put(uuid, new PlayerData(value, previous.debug()));
     }
 
+    /**
+     * Checks whether debug output is enabled for a player.
+     *
+     * @param uuid player identifier
+     * @return {@code true} when debug output is enabled
+     */
     public boolean debug(UUID uuid) {
         return data.getOrDefault(uuid, new PlayerData(0, false)).debug();
     }
 
+    /**
+     * Updates a player's debug setting while retaining their freeze progress.
+     *
+     * @param uuid  player identifier
+     * @param value whether debug output should be enabled
+     * @return the new debug setting
+     */
     public boolean setDebug(UUID uuid, boolean value) {
         PlayerData previous = data.getOrDefault(uuid, new PlayerData(0, false));
         data.put(uuid, new PlayerData(previous.actualFreezeTicks(), value));
         return value;
     }
 
-    private record PlayerData(double actualFreezeTicks, boolean debug) {}
+    /**
+     * Persisted values associated with one player.
+     */
+    private record PlayerData(double actualFreezeTicks, boolean debug) {
+    }
 }

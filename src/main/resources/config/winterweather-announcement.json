@@ -1,11 +1,22 @@
 {
-  "chatMessage": "❄ Winter has begun! ❄",
-  "chatExtraLines": [
-    "The cold is settling in."
-  ],
-  "bannerTitle": "WINTER HAS ARRIVED",
-  "bannerSubtitle": "The cold is settling in",
-  "bannerExtraLines": [
-    "Prepare for the frost"
-  ]
+  "schema_version": 1,
+  "chat": {
+    "message": "❄ Winter has begun! ❄",
+    "extra_lines": [
+      "The cold is settling in."
+    ]
+  },
+  "screen": {
+    "title": "WINTER HAS ARRIVED",
+    "subtitle": "The cold is settling in",
+    "extra_lines": [
+      "Prepare for the frost"
+    ],
+    "animation": {
+      "type": "snowburst",
+      "duration_ms": 7000,
+      "particle_count": 14,
+      "accent_color": "65DFFF"
+    }
+  }
 }

@@ -15,6 +15,25 @@ import net.minecraft.world.level.block.Block;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Network payload for transferring config data.
+ *
+ * @param enabled                         the enabled value
+ * @param criticalFreezingTicks           the critical freezing ticks value
+ * @param playerRadius                    the player radius value
+ * @param maxPossibleIsolation            the max possible isolation value
+ * @param playerBurningBoost              the player burning boost value
+ * @param playerPowderSnowBoost           the player powder snow boost value
+ * @param interpolation                   the interpolation value
+ * @param Block                           the block value
+ * @param blocks                          the blocks value
+ * @param Identifier                      the identifier value
+ * @param armorIsolation                  the armor isolation value
+ * @param heatSourcesEnabled              the heat sources enabled value
+ * @param useUnlitState                   the use unlit state value
+ * @param heatSourceRelightingEnabled     the heat source relighting enabled value
+ * @param heatSourceRelightDurabilityCost the heat source relight durability cost value
+ */
 public record ConfigPayload(
         boolean enabled,
         int criticalFreezingTicks,
@@ -30,40 +49,32 @@ public record ConfigPayload(
         boolean heatSourceRelightingEnabled,
         int heatSourceRelightDurabilityCost
 ) implements CustomPacketPayload {
-
     public static final Type<ConfigPayload> TYPE =
             new Type<>(Identifier.parse("winterweather:config"));
-
     private static final StreamCodec<RegistryFriendlyByteBuf, Boolean> BOOL_CODEC =
             StreamCodec.of(
                     RegistryFriendlyByteBuf::writeBoolean,
                     RegistryFriendlyByteBuf::readBoolean
             );
-
     private static final StreamCodec<RegistryFriendlyByteBuf, Integer> INT_CODEC =
             StreamCodec.of(
                     RegistryFriendlyByteBuf::writeInt,
                     RegistryFriendlyByteBuf::readInt
             );
-
     private static final StreamCodec<RegistryFriendlyByteBuf, Double> DOUBLE_CODEC =
             StreamCodec.of(
                     RegistryFriendlyByteBuf::writeDouble,
                     RegistryFriendlyByteBuf::readDouble
             );
-
     private static final StreamCodec<RegistryFriendlyByteBuf, String> STRING_CODEC =
             StreamCodec.of(
                     RegistryFriendlyByteBuf::writeUtf,
                     RegistryFriendlyByteBuf::readUtf
             );
-
     private static final StreamCodec<RegistryFriendlyByteBuf, Block> BLOCK_CODEC =
             ByteBufCodecs.registry(Registries.BLOCK);
-
     private static final StreamCodec<ByteBuf, Identifier> IDENTIFIER_CODEC =
             Identifier.STREAM_CODEC;
-
     private static final StreamCodec<RegistryFriendlyByteBuf, BlockConfig> BLOCK_CONFIG_CODEC =
             StreamCodec.composite(
                     DOUBLE_CODEC,
@@ -76,7 +87,6 @@ public record ConfigPayload(
                     BlockConfig::burnoutSeconds,
                     BlockConfig::new
             );
-
     private static final StreamCodec<RegistryFriendlyByteBuf, Map<Block, BlockConfig>> BLOCKS_CODEC =
             ByteBufCodecs.map(
                     HashMap::new,
@@ -84,7 +94,6 @@ public record ConfigPayload(
                     BLOCK_CONFIG_CODEC,
                     256
             );
-
     private static final StreamCodec<RegistryFriendlyByteBuf, Map<Identifier, Double>> ARMOR_ISOLATION_CODEC =
             ByteBufCodecs.map(
                     HashMap::new,
@@ -92,7 +101,6 @@ public record ConfigPayload(
                     DOUBLE_CODEC,
                     256
             );
-
     public static final StreamCodec<RegistryFriendlyByteBuf, ConfigPayload> CODEC =
             StreamCodec.of(
                     (buffer, payload) -> {
@@ -103,10 +111,8 @@ public record ConfigPayload(
                         DOUBLE_CODEC.encode(buffer, payload.playerBurningBoost());
                         DOUBLE_CODEC.encode(buffer, payload.playerPowderSnowBoost());
                         STRING_CODEC.encode(buffer, payload.interpolation());
-
                         BLOCKS_CODEC.encode(buffer, payload.blocks());
                         ARMOR_ISOLATION_CODEC.encode(buffer, payload.armorIsolation());
-
                         BOOL_CODEC.encode(buffer, payload.heatSourcesEnabled());
                         BOOL_CODEC.encode(buffer, payload.useUnlitState());
                         BOOL_CODEC.encode(buffer, payload.heatSourceRelightingEnabled());
@@ -120,10 +126,8 @@ public record ConfigPayload(
                             DOUBLE_CODEC.decode(buffer),
                             DOUBLE_CODEC.decode(buffer),
                             STRING_CODEC.decode(buffer),
-
                             BLOCKS_CODEC.decode(buffer),
                             ARMOR_ISOLATION_CODEC.decode(buffer),
-
                             BOOL_CODEC.decode(buffer),
                             BOOL_CODEC.decode(buffer),
                             BOOL_CODEC.decode(buffer),
@@ -131,6 +135,11 @@ public record ConfigPayload(
                     )
             );
 
+    /**
+     * Performs the from operation.
+     *
+     * @param config the config value
+     */
     public static ConfigPayload from(FreezingConfig config) {
         return new ConfigPayload(
                 config.enabled(),
@@ -149,6 +158,9 @@ public record ConfigPayload(
         );
     }
 
+    /**
+     * Performs the to config operation.
+     */
     public FreezingConfig toConfig() {
         return new FreezingConfig(
                 enabled,
@@ -167,6 +179,9 @@ public record ConfigPayload(
         );
     }
 
+    /**
+     * Performs the type operation.
+     */
     @Override
     public Type<? extends CustomPacketPayload> type() {
         return TYPE;

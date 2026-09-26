@@ -12,8 +12,18 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Mixin hooks that connect block behavior to Winter Weather.
+ */
 @Mixin(Block.class)
 public abstract class BlockMixin {
+    /**
+     * Performs the winterweather$add torch property operation.
+     *
+     * @param Block        the block value
+     * @param builder      the builder value
+     * @param callbackInfo the callback info value
+     */
     @Inject(method = "createBlockStateDefinition", at = @At("TAIL"))
     private void winterweather$addTorchProperty(
             StateDefinition.Builder<Block, BlockState> builder,
@@ -24,6 +34,11 @@ public abstract class BlockMixin {
         }
     }
 
+    /**
+     * Performs the winterweather$default extinguishable state operation.
+     *
+     * @param callbackInfo the callback info value
+     */
     @Inject(method = "defaultBlockState", at = @At("RETURN"), cancellable = true)
     private void winterweather$defaultExtinguishableState(
             CallbackInfoReturnable<BlockState> callbackInfo
