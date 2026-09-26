@@ -4,7 +4,8 @@
   "package": "dk.tij.winterweather.mixin.client",
   "compatibilityLevel": "JAVA_25",
   "client": [
-    "LivingEntityClientMixin"
+    "LivingEntityClientMixin",
+    "CampfireBlockClientMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -2,6 +2,7 @@ package dk.tij.winterweather.commands;
 
 import dk.tij.winterweather.WinterWeather;
 import dk.tij.winterweather.torch.TorchManager;
+import dk.tij.winterweather.network.FreezeNetworking;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -62,6 +63,15 @@ public final class WinterCommand {
                                                 BlockPosArgument.getBlockPos(context, "pos"),
                                                 false
                                         ))))
+                        .then(literal("particle")
+                                .then(literal("on")
+                                        .executes(context -> setCampfireSmoke(context, false, null))
+                                        .then(argument("pos", BlockPosArgument.blockPos()).executes(context ->
+                                                setCampfireSmoke(context, false, BlockPosArgument.getBlockPos(context, "pos")))))
+                                .then(literal("off")
+                                        .executes(context -> setCampfireSmoke(context, true, null))
+                                        .then(argument("pos", BlockPosArgument.blockPos()).executes(context ->
+                                                setCampfireSmoke(context, true, BlockPosArgument.getBlockPos(context, "pos"))))))
                         .then(literal("debug")
                                 .executes(context -> toggleDebug(context.getSource().getPlayerOrException(), mod))
                                 .then(argument("enabled", BoolArgumentType.bool()).executes(context -> {
@@ -144,6 +154,43 @@ public final class WinterCommand {
                 () -> Component.literal(action + " heat source at " + pos.getX() + ", " + pos.getY() + ", " + pos.getZ()),
                 true
         );
+        return 1;
+    }
+
+    private static int setCampfireSmoke(CommandContext<CommandSourceStack> context, boolean suppressed, BlockPos target) {
+        CommandSourceStack source = context.getSource();
+        if (!(source.getLevel() instanceof ServerLevel level)) {
+            source.sendFailure(Component.literal("This command can only be used in-game."));
+            return 0;
+        }
+        if (target == null) {
+            ServerPlayer player;
+            try {
+                player = source.getPlayerOrException();
+            } catch (CommandSyntaxException exception) {
+                source.sendFailure(Component.literal("Provide a campfire position when using this command from the console."));
+                return 0;
+            }
+            HitResult hit = player.pick(player.blockInteractionRange(), 1.0F, false);
+            if (!(hit instanceof BlockHitResult blockHit) || hit.getType() != HitResult.Type.BLOCK) {
+                source.sendFailure(Component.literal("Look at a campfire."));
+                return 0;
+            }
+            target = blockHit.getBlockPos();
+        }
+
+        TorchManager manager = WinterWeather.torchManagerOrNull();
+        if (manager == null || !manager.setSmokeSuppressed(level, target, suppressed)) {
+            source.sendFailure(Component.literal("That block is not a campfire."));
+            return 0;
+        }
+        final BlockPos pos = target;
+        for (ServerPlayer player : level.players()) {
+            FreezeNetworking.sendCampfireSmoke(player, pos, suppressed);
+        }
+        source.sendSuccess(() -> Component.literal("Campfire smoke particles "
+                + (suppressed ? "disabled" : "enabled") + " at "
+                + pos.getX() + ", " + pos.getY() + ", " + pos.getZ()), true);
         return 1;
     }
 
