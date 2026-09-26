@@ -10,7 +10,6 @@ import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -18,11 +17,15 @@ import java.util.Set;
 public final class TorchData extends SavedData {
     private static final Codec<Entry> ENTRY_CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.LONG.fieldOf("pos").forGetter(Entry::pos),
-            Codec.LONG.fieldOf("extinguish_at").forGetter(Entry::extinguishAt)
+            Codec.LONG.fieldOf("extinguish_at").forGetter(Entry::extinguishAt),
+            Codec.BOOL.optionalFieldOf("locked", false).forGetter(Entry::locked)
     ).apply(instance, Entry::new));
     private static final Codec<TorchData> CODEC = ENTRY_CODEC.listOf()
             .xmap(TorchData::new, data -> data.entries().stream()
-                    .map(entry -> new Entry(entry.getKey(), entry.getValue().extinguishAt()))
+                    .map(entry -> new Entry(
+                            entry.getKey(),
+                            entry.getValue().extinguishAt(),
+                            entry.getValue().locked()))
                     .toList());
     private static final SavedDataType<TorchData> TYPE = new SavedDataType<>(
             Identifier.parse("winterweather/torches"),
@@ -38,7 +41,7 @@ public final class TorchData extends SavedData {
 
     private TorchData(java.util.List<Entry> entries) {
         for (Entry entry : entries) {
-            this.entries.put(entry.pos(), new TorchState(entry.extinguishAt()));
+            this.entries.put(entry.pos(), new TorchState(entry.extinguishAt(), entry.locked()));
         }
     }
 
@@ -65,6 +68,6 @@ public final class TorchData extends SavedData {
         }
     }
 
-    private record Entry(long pos, long extinguishAt) {
+    private record Entry(long pos, long extinguishAt, boolean locked) {
     }
 }

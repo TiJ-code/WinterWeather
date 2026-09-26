@@ -10,6 +10,7 @@
     "WallTorchBlockMixin",
     "BlockStateBaseMixin",
     "BlockLifecycleMixin",
+    "CampfireBlockMixin",
     "LevelMixin"
   ],
   "injectors": {
