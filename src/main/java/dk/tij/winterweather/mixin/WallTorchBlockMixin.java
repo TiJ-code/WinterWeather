@@ -1,6 +1,6 @@
 package dk.tij.winterweather.mixin;
 
-import dk.tij.winterweather.torch.TorchBlocks;
+import dk.tij.winterweather.heat.HeatSourceBlocks;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.WallTorchBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -17,7 +17,7 @@ public abstract class WallTorchBlockMixin {
             StateDefinition.Builder<Block, BlockState> builder,
             CallbackInfo callbackInfo
     ) {
-        builder.add(TorchBlocks.LIT);
+        builder.add(HeatSourceBlocks.LIT);
     }
 
     @Inject(method = "animateTick", at = @At("HEAD"), cancellable = true)
@@ -26,8 +26,8 @@ public abstract class WallTorchBlockMixin {
             net.minecraft.core.BlockPos pos, net.minecraft.util.RandomSource random,
             CallbackInfo callbackInfo
     ) {
-        if (state.hasProperty(TorchBlocks.LIT)
-                && !state.getValue(TorchBlocks.LIT)) {
+        if (state.hasProperty(HeatSourceBlocks.LIT)
+                && !state.getValue(HeatSourceBlocks.LIT)) {
             callbackInfo.cancel();
         }
     }

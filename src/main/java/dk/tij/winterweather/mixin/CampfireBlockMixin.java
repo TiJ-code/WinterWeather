@@ -1,7 +1,7 @@
 package dk.tij.winterweather.mixin;
 
 import dk.tij.winterweather.WinterWeather;
-import dk.tij.winterweather.torch.TorchManager;
+import dk.tij.winterweather.heat.HeatSourceManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -47,7 +47,7 @@ public abstract class CampfireBlockMixin {
         if (!(level instanceof ServerLevel serverLevel)) {
             return false;
         }
-        TorchManager manager = WinterWeather.torchManagerOrNull();
+        HeatSourceManager manager = WinterWeather.heatSourceManagerOrNull();
         return manager != null && manager.isLocked(serverLevel, pos);
     }
 }

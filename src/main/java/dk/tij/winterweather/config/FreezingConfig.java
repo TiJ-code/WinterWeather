@@ -15,6 +15,7 @@ import dk.tij.winterweather.server.config.HeatSourcesConfig;
 import dk.tij.winterweather.server.config.IsolationConfig;
 import dk.tij.winterweather.server.config.WinterWeatherConfig;
 import dk.tij.winterweather.server.config.WinterWeatherConfigLoader;
+import dk.tij.winterweather.heat.HeatSourceBlocks;
 import dk.tij.winterweather.utils.InterpolationFunctions;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;
@@ -45,10 +46,10 @@ public record FreezingConfig(
         InterpolationFunctions interpolation,
         Map<Block, BlockConfig> blocks,
         Map<Identifier, Double> armorIsolation,
-        boolean torchesEnabled,
+        boolean heatSourcesEnabled,
         boolean useUnlitState,
-        boolean torchRelightingEnabled,
-        int torchRelightDurabilityCost
+        boolean heatSourceRelightingEnabled,
+        int heatSourceRelightDurabilityCost
 ) {
     public static final int MAX_FROZEN_TICKS = 140;
 
@@ -151,7 +152,7 @@ public record FreezingConfig(
 
         Map<Block, BlockConfig> blocks = new HashMap<>();
         for (HeatSourceConfig source : heatSources.blocks()) {
-            boolean extinguishable = heatSources.extinguishable() && source.burnoutSeconds() > 0;
+            boolean extinguishable = heatSources.extinguishable();
             for (HeatSourceVariant variant : source.variants()) {
                 Identifier id = Identifier.tryParse(variant.blockId());
                 if (id == null || !BuiltInRegistries.BLOCK.containsKey(id)) {
@@ -216,7 +217,7 @@ public record FreezingConfig(
                 playerBlockPos.offset(-radius, -radius, -radius),
                 playerBlockPos.offset(radius, radius, radius))) {
             var state = level.getBlockState(candidate);
-            if (!dk.tij.winterweather.torch.TorchManager.isLit(state)) {
+            if (!dk.tij.winterweather.heat.HeatSourceManager.isLit(state)) {
                 continue;
             }
             BlockConfig source = blocks.get(state.getBlock());
@@ -252,7 +253,9 @@ public record FreezingConfig(
 
     public boolean isExtinguishable(BlockState state) {
         BlockConfig config = blocks.get(state.getBlock());
-        return config != null && config.extinguishable();
+        return config != null && config.extinguishable()
+                && (state.hasProperty(HeatSourceBlocks.LIT)
+                || state.hasProperty(net.minecraft.world.level.block.CampfireBlock.LIT));
     }
 
     public int extinguishableBurnoutSeconds(BlockState state) {

@@ -25,10 +25,10 @@ public record ConfigPayload(
         String interpolation,
         Map<Block, BlockConfig> blocks,
         Map<Identifier, Double> armorIsolation,
-        boolean torchesEnabled,
+        boolean heatSourcesEnabled,
         boolean useUnlitState,
-        boolean torchRelightingEnabled,
-        int torchRelightDurabilityCost
+        boolean heatSourceRelightingEnabled,
+        int heatSourceRelightDurabilityCost
 ) implements CustomPacketPayload {
 
     public static final Type<ConfigPayload> TYPE =
@@ -107,10 +107,10 @@ public record ConfigPayload(
                         BLOCKS_CODEC.encode(buffer, payload.blocks());
                         ARMOR_ISOLATION_CODEC.encode(buffer, payload.armorIsolation());
 
-                        BOOL_CODEC.encode(buffer, payload.torchesEnabled());
+                        BOOL_CODEC.encode(buffer, payload.heatSourcesEnabled());
                         BOOL_CODEC.encode(buffer, payload.useUnlitState());
-                        BOOL_CODEC.encode(buffer, payload.torchRelightingEnabled());
-                        INT_CODEC.encode(buffer, payload.torchRelightDurabilityCost());
+                        BOOL_CODEC.encode(buffer, payload.heatSourceRelightingEnabled());
+                        INT_CODEC.encode(buffer, payload.heatSourceRelightDurabilityCost());
                     },
                     buffer -> new ConfigPayload(
                             BOOL_CODEC.decode(buffer),
@@ -142,10 +142,10 @@ public record ConfigPayload(
                 config.interpolation().getName(),
                 config.blocks(),
                 config.armorIsolation(),
-                config.torchesEnabled(),
+                config.heatSourcesEnabled(),
                 config.useUnlitState(),
-                config.torchRelightingEnabled(),
-                config.torchRelightDurabilityCost()
+                config.heatSourceRelightingEnabled(),
+                config.heatSourceRelightDurabilityCost()
         );
     }
 
@@ -160,10 +160,10 @@ public record ConfigPayload(
                 InterpolationFunctions.by(interpolation),
                 blocks,
                 armorIsolation,
-                torchesEnabled,
+                heatSourcesEnabled,
                 useUnlitState,
-                torchRelightingEnabled,
-                torchRelightDurabilityCost
+                heatSourceRelightingEnabled,
+                heatSourceRelightDurabilityCost
         );
     }
 

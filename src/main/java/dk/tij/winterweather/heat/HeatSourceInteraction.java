@@ -1,4 +1,4 @@
-package dk.tij.winterweather.torch;
+package dk.tij.winterweather.heat;
 
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.server.level.ServerLevel;
@@ -12,16 +12,16 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 
-public final class TorchInteraction {
-    private TorchInteraction() {
+public final class HeatSourceInteraction {
+    private HeatSourceInteraction() {
     }
 
-    public static void register(TorchManager manager) {
+    public static void register(HeatSourceManager manager) {
         UseBlockCallback.EVENT.register((player, level, hand, hit) ->
                 interact(manager, player, level, hand, hit));
     }
 
-    private static InteractionResult interact(TorchManager manager, Player player, Level level,
+    private static InteractionResult interact(HeatSourceManager manager, Player player, Level level,
                                               InteractionHand hand, BlockHitResult hit) {
         BlockPos pos = hit.getBlockPos();
         BlockState state = level.getBlockState(pos);
@@ -32,7 +32,7 @@ public final class TorchInteraction {
         }
 
         if (held.is(Items.FLINT_AND_STEEL)) {
-            if (!TorchManager.isLit(state) && manager.relightingEnabled()) {
+            if (!HeatSourceManager.isLit(state) && manager.relightingEnabled()) {
                 if (!(level instanceof ServerLevel serverLevel)) {
                     return InteractionResult.SUCCESS;
                 }
@@ -49,7 +49,7 @@ public final class TorchInteraction {
             return InteractionResult.PASS;
         }
 
-        if (TorchManager.isLit(state) && held.isEmpty()) {
+        if (HeatSourceManager.isLit(state) && held.isEmpty()) {
             return manager.extinguish(serverLevel, pos, state)
                     ? InteractionResult.SUCCESS
                     : InteractionResult.PASS;

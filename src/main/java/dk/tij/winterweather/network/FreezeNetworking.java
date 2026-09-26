@@ -71,7 +71,7 @@ public final class FreezeNetworking {
     }
 
     private static void sendCampfireSmoke(ServerPlayer player) {
-        var data = dk.tij.winterweather.data.TorchData.get((ServerLevel) player.level());
+        var data = dk.tij.winterweather.data.HeatSourceData.get((ServerLevel) player.level());
         for (var entry : data.entries()) {
             if (entry.getValue().suppressSmoke()) {
                 ServerPlayNetworking.send(player,

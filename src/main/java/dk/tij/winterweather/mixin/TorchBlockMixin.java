@@ -1,6 +1,6 @@
 package dk.tij.winterweather.mixin;
 
-import dk.tij.winterweather.torch.TorchBlocks;
+import dk.tij.winterweather.heat.HeatSourceBlocks;
 import net.minecraft.world.level.block.TorchBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.Level;
@@ -17,8 +17,8 @@ public abstract class TorchBlockMixin {
     private void winterweather$hideUnlitParticles(
             BlockState state, Level level, BlockPos pos, RandomSource random, CallbackInfo callbackInfo
     ) {
-        if (state.hasProperty(TorchBlocks.LIT)
-                && !state.getValue(TorchBlocks.LIT)) {
+        if (state.hasProperty(HeatSourceBlocks.LIT)
+                && !state.getValue(HeatSourceBlocks.LIT)) {
             callbackInfo.cancel();
         }
     }

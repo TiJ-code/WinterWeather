@@ -1,7 +1,7 @@
 package dk.tij.winterweather.commands;
 
 import dk.tij.winterweather.WinterWeather;
-import dk.tij.winterweather.torch.TorchManager;
+import dk.tij.winterweather.heat.HeatSourceManager;
 import dk.tij.winterweather.network.FreezeNetworking;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -132,9 +132,9 @@ public final class WinterCommand {
             return 0;
         }
 
-        TorchManager manager = WinterWeather.torchManagerOrNull();
+        HeatSourceManager manager = WinterWeather.heatSourceManagerOrNull();
         if (manager == null) {
-            source.sendFailure(Component.literal("Torch manager is not available."));
+            source.sendFailure(Component.literal("Heat source manager is not available."));
             return 0;
         }
 
@@ -179,7 +179,7 @@ public final class WinterCommand {
             target = blockHit.getBlockPos();
         }
 
-        TorchManager manager = WinterWeather.torchManagerOrNull();
+        HeatSourceManager manager = WinterWeather.heatSourceManagerOrNull();
         if (manager == null || !manager.setSmokeSuppressed(level, target, suppressed)) {
             source.sendFailure(Component.literal("That block is not a campfire."));
             return 0;

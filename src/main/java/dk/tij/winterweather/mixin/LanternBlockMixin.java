@@ -1,6 +1,6 @@
 package dk.tij.winterweather.mixin;
 
-import dk.tij.winterweather.torch.TorchBlocks;
+import dk.tij.winterweather.heat.HeatSourceBlocks;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LanternBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -18,19 +18,19 @@ public abstract class LanternBlockMixin {
     @Inject(method = "createBlockStateDefinition", at = @At("TAIL"))
     private void winterweather$addLitProperty(StateDefinition.Builder<Block, BlockState> builder,
                                                CallbackInfo callbackInfo) {
-        builder.add(TorchBlocks.LIT);
+        builder.add(HeatSourceBlocks.LIT);
     }
 
     @ModifyArg(method = "<init>", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/level/block/LanternBlock;registerDefaultState(Lnet/minecraft/world/level/block/state/BlockState;)V"))
     private BlockState winterweather$registerUnlitDefault(BlockState defaultState) {
-        return defaultState.setValue(TorchBlocks.LIT, false);
+        return defaultState.setValue(HeatSourceBlocks.LIT, false);
     }
 
     @Inject(method = "getStateForPlacement", at = @At("RETURN"), cancellable = true)
     private void winterweather$placeLanternUnlit(BlockPlaceContext context,
                                                   CallbackInfoReturnable<BlockState> callbackInfo) {
         BlockState state = callbackInfo.getReturnValue();
-        if (state != null) callbackInfo.setReturnValue(state.setValue(TorchBlocks.LIT, false));
+        if (state != null) callbackInfo.setReturnValue(state.setValue(HeatSourceBlocks.LIT, false));
     }
 }

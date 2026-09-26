@@ -1,30 +1,31 @@
-package dk.tij.winterweather.torch;
+package dk.tij.winterweather.heat;
 
 import dk.tij.winterweather.config.FreezingConfig;
-import dk.tij.winterweather.data.TorchData;
+import dk.tij.winterweather.data.HeatSourceData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.CampfireBlock;
+import net.minecraft.world.level.block.LanternBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.function.Supplier;
 
-public final class TorchManager {
+public final class HeatSourceManager {
     private final Supplier<FreezingConfig> config;
 
-    public TorchManager(Supplier<FreezingConfig> config) {
+    public HeatSourceManager(Supplier<FreezingConfig> config) {
         this.config = config;
     }
 
-    public void registerPlacedTorch(ServerLevel level, BlockPos pos, BlockState state) {
-        if (!config.get().torchesEnabled() || !isExtinguishable(state)) {
+    public void registerPlacedHeatSource(ServerLevel level, BlockPos pos, BlockState state) {
+        if (!config.get().heatSourcesEnabled() || !isExtinguishable(state)) {
             return;
         }
 
-        TorchData data = TorchData.get(level);
-        TorchState existing = data.get(pos);
+        HeatSourceData data = HeatSourceData.get(level);
+        HeatSourceState existing = data.get(pos);
         if (existing != null) {
             return;
         }
@@ -34,24 +35,24 @@ public final class TorchManager {
             if (unlitState != state) {
                 level.setBlock(pos, unlitState, 3);
             }
-            data.set(pos, new TorchState(0));
+            data.set(pos, new HeatSourceState(0));
             return;
         }
 
         int burnoutTicks = burnoutTicks(state);
         if (burnoutTicks > 0 && isLit(state)) {
-            data.set(pos, new TorchState(level.getGameTime() + burnoutTicks));
+            data.set(pos, new HeatSourceState(level.getGameTime() + burnoutTicks));
         } else {
-            data.set(pos, new TorchState(0));
+            data.set(pos, new HeatSourceState(0));
         }
     }
 
-    public void removeTorch(ServerLevel level, BlockPos pos) {
-        TorchData.get(level).remove(pos);
+    public void removeHeatSource(ServerLevel level, BlockPos pos) {
+        HeatSourceData.get(level).remove(pos);
     }
 
     public boolean extinguish(ServerLevel level, BlockPos pos, BlockState state) {
-        if (!config.get().torchesEnabled() || !isExtinguishable(state) || !isLit(state)) {
+        if (!config.get().heatSourcesEnabled() || !isExtinguishable(state) || !isLit(state)) {
             return false;
         }
         if (isLocked(level, pos)) {
@@ -59,27 +60,27 @@ public final class TorchManager {
         }
 
         level.setBlock(pos, withLit(state, false), 3);
-        TorchData data = TorchData.get(level);
-        TorchState previous = data.get(pos);
-        data.set(pos, new TorchState(0, previous != null && previous.locked(), previous != null && previous.suppressSmoke()));
+        HeatSourceData data = HeatSourceData.get(level);
+        HeatSourceState previous = data.get(pos);
+        data.set(pos, new HeatSourceState(0, previous != null && previous.locked(), previous != null && previous.suppressSmoke()));
         level.playSound(null, pos, SoundEvents.CANDLE_EXTINGUISH, SoundSource.BLOCKS, 1, 1);
         return true;
     }
 
     public boolean relight(ServerLevel level, BlockPos pos, BlockState state) {
-        if (!config.get().torchesEnabled() || !isRelightable(state) || isLit(state)) {
+        if (!config.get().heatSourcesEnabled() || !isRelightable(state) || isLit(state)) {
             return false;
         }
 
         level.setBlock(pos, withLit(state, true), 11);
-        TorchData data = TorchData.get(level);
-        TorchState previous = data.get(pos);
+        HeatSourceData data = HeatSourceData.get(level);
+        HeatSourceState previous = data.get(pos);
         boolean locked = previous != null && previous.locked();
         int burnoutTicks = burnoutTicks(state);
         long extinguishAt = !locked && burnoutTicks > 0
                 ? level.getGameTime() + burnoutTicks
                 : 0;
-        data.set(pos, new TorchState(extinguishAt, locked, previous != null && previous.suppressSmoke()));
+        data.set(pos, new HeatSourceState(extinguishAt, locked, previous != null && previous.suppressSmoke()));
         level.playSound(null, pos, SoundEvents.FLINTANDSTEEL_USE, SoundSource.BLOCKS, 1, 1);
         return true;
     }
@@ -90,10 +91,10 @@ public final class TorchManager {
             return false;
         }
 
-        TorchData data = TorchData.get(level);
-        TorchState previous = data.get(pos);
+        HeatSourceData data = HeatSourceData.get(level);
+        HeatSourceState previous = data.get(pos);
         if (previous == null) {
-            previous = new TorchState(0);
+            previous = new HeatSourceState(0);
         }
 
         if (previous.locked() == locked) {
@@ -109,7 +110,7 @@ public final class TorchManager {
             }
         }
 
-        data.set(pos, new TorchState(extinguishAt, locked, previous.suppressSmoke()));
+        data.set(pos, new HeatSourceState(extinguishAt, locked, previous.suppressSmoke()));
         return true;
     }
 
@@ -117,24 +118,24 @@ public final class TorchManager {
         if (!(level.getBlockState(pos).getBlock() instanceof CampfireBlock)) {
             return false;
         }
-        TorchData data = TorchData.get(level);
-        TorchState previous = data.get(pos);
-        if (previous == null) previous = new TorchState(0);
+        HeatSourceData data = HeatSourceData.get(level);
+        HeatSourceState previous = data.get(pos);
+        if (previous == null) previous = new HeatSourceState(0);
         data.set(pos, previous.withSmokeSuppressed(suppressed));
         return true;
     }
 
     public boolean isSmokeSuppressed(ServerLevel level, BlockPos pos) {
-        TorchState state = TorchData.get(level).get(pos);
+        HeatSourceState state = HeatSourceData.get(level).get(pos);
         return state != null && state.suppressSmoke();
     }
 
     public void tick(ServerLevel level) {
-        if (!config.get().torchesEnabled()) {
+        if (!config.get().heatSourcesEnabled()) {
             return;
         }
 
-        TorchData data = TorchData.get(level);
+        HeatSourceData data = HeatSourceData.get(level);
         for (var entry : new java.util.ArrayList<>(data.entries())) {
             BlockPos pos = BlockPos.of(entry.getKey());
             BlockState state = level.getBlockState(pos);
@@ -143,28 +144,28 @@ public final class TorchManager {
                 continue;
             }
 
-            TorchState torchState = entry.getValue();
-            if (torchState.locked()) {
+            HeatSourceState heatSourceState = entry.getValue();
+            if (heatSourceState.locked()) {
                 continue;
             }
 
-            if (isLit(state) && torchState.isExpired(level.getGameTime())) {
+            if (isLit(state) && heatSourceState.isExpired(level.getGameTime())) {
                 extinguish(level, pos, state);
             }
         }
     }
 
     public static boolean isLit(BlockState state) {
-        if (state.hasProperty(TorchBlocks.LIT)) {
-            return state.getValue(TorchBlocks.LIT);
+        if (state.hasProperty(HeatSourceBlocks.LIT)) {
+            return state.getValue(HeatSourceBlocks.LIT);
         }
         return !state.hasProperty(CampfireBlock.LIT)
                 || state.getValue(CampfireBlock.LIT);
     }
 
     public static BlockState withLit(BlockState state, boolean lit) {
-        if (state.hasProperty(TorchBlocks.LIT)) {
-            return state.setValue(TorchBlocks.LIT, lit);
+        if (state.hasProperty(HeatSourceBlocks.LIT)) {
+            return state.setValue(HeatSourceBlocks.LIT, lit);
         }
         if (state.hasProperty(CampfireBlock.LIT)) {
             return state.setValue(CampfireBlock.LIT, lit);
@@ -181,24 +182,29 @@ public final class TorchManager {
     }
 
     public int relightDurabilityCost() {
-        return config.get().torchRelightDurabilityCost();
+        return config.get().heatSourceRelightDurabilityCost();
     }
 
     public boolean relightingEnabled() {
-        return config.get().torchRelightingEnabled();
+        return config.get().heatSourceRelightingEnabled();
     }
 
     public boolean isExtinguishable(BlockState state) {
-        return config.get().isExtinguishable(state);
+        if (config.get().isExtinguishable(state)) {
+            return true;
+        }
+
+        return config.get().heatSourcesEnabled()
+                && state.getBlock() instanceof LanternBlock
+                && state.hasProperty(HeatSourceBlocks.LIT);
     }
 
     public boolean isRelightable(BlockState state) {
-        return isExtinguishable(state)
-                || (config.get().torchesEnabled() && state.hasProperty(TorchBlocks.LIT));
+        return isExtinguishable(state);
     }
 
     public boolean isLocked(ServerLevel level, BlockPos pos) {
-        TorchState state = TorchData.get(level).get(pos);
+        HeatSourceState state = HeatSourceData.get(level).get(pos);
         return state != null && state.locked();
     }
 }
