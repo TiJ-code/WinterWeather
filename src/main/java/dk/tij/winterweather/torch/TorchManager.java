@@ -24,7 +24,8 @@ public final class TorchManager {
         }
 
         TorchData data = TorchData.get(level);
-        if (data.get(pos) != null) {
+        TorchState existing = data.get(pos);
+        if (existing != null) {
             return;
         }
 
@@ -32,7 +33,6 @@ public final class TorchManager {
             BlockState unlitState = unlitState(state);
             if (unlitState != state) {
                 level.setBlock(pos, unlitState, 3);
-                state = unlitState;
             }
             data.set(pos, new TorchState(0));
             return;
@@ -54,9 +54,14 @@ public final class TorchManager {
         if (!config.get().torchesEnabled() || !isExtinguishable(state) || !isLit(state)) {
             return false;
         }
+        if (isLocked(level, pos)) {
+            return false;
+        }
 
         level.setBlock(pos, withLit(state, false), 3);
-        TorchData.get(level).set(pos, new TorchState(0));
+        TorchData data = TorchData.get(level);
+        TorchState previous = data.get(pos);
+        data.set(pos, new TorchState(0, previous != null && previous.locked()));
         level.playSound(null, pos, SoundEvents.CANDLE_EXTINGUISH, SoundSource.BLOCKS, 1, 1);
         return true;
     }
@@ -67,11 +72,44 @@ public final class TorchManager {
         }
 
         level.setBlock(pos, withLit(state, true), 11);
+        TorchData data = TorchData.get(level);
+        TorchState previous = data.get(pos);
+        boolean locked = previous != null && previous.locked();
         int burnoutTicks = burnoutTicks(state);
-        if (burnoutTicks > 0) {
-            TorchData.get(level).set(pos, new TorchState(level.getGameTime() + burnoutTicks));
-        }
+        long extinguishAt = !locked && burnoutTicks > 0
+                ? level.getGameTime() + burnoutTicks
+                : 0;
+        data.set(pos, new TorchState(extinguishAt, locked));
         level.playSound(null, pos, SoundEvents.FLINTANDSTEEL_USE, SoundSource.BLOCKS, 1, 1);
+        return true;
+    }
+
+    public boolean setLocked(ServerLevel level, BlockPos pos, boolean locked) {
+        BlockState state = level.getBlockState(pos);
+        if (!isExtinguishable(state)) {
+            return false;
+        }
+
+        TorchData data = TorchData.get(level);
+        TorchState previous = data.get(pos);
+        if (previous == null) {
+            previous = new TorchState(0);
+        }
+
+        if (previous.locked() == locked) {
+            data.set(pos, previous);
+            return true;
+        }
+
+        long extinguishAt = 0;
+        if (!locked && isLit(state)) {
+            int burnoutTicks = burnoutTicks(state);
+            if (burnoutTicks > 0) {
+                extinguishAt = level.getGameTime() + burnoutTicks;
+            }
+        }
+
+        data.set(pos, new TorchState(extinguishAt, locked));
         return true;
     }
 
@@ -89,7 +127,12 @@ public final class TorchManager {
                 continue;
             }
 
-            if (isLit(state) && entry.getValue().isExpired(level.getGameTime())) {
+            TorchState torchState = entry.getValue();
+            if (torchState.locked()) {
+                continue;
+            }
+
+            if (isLit(state) && torchState.isExpired(level.getGameTime())) {
                 extinguish(level, pos, state);
             }
         }
@@ -131,5 +174,10 @@ public final class TorchManager {
 
     public boolean isExtinguishable(BlockState state) {
         return config.get().isExtinguishable(state);
+    }
+
+    public boolean isLocked(ServerLevel level, BlockPos pos) {
+        TorchState state = TorchData.get(level).get(pos);
+        return state != null && state.locked();
     }
 }
