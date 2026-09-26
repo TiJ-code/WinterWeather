@@ -1,7 +1,7 @@
 package dk.tij.winterweather.network;
 
 import dk.tij.winterweather.config.FreezingConfig;
-import dk.tij.winterweather.config.HeatSource;
+import dk.tij.winterweather.server.config.BlockConfig;
 import dk.tij.winterweather.utils.InterpolationFunctions;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.registries.Registries;
@@ -23,10 +23,10 @@ public record ConfigPayload(
         double playerBurningBoost,
         double playerPowderSnowBoost,
         String interpolation,
-        Map<Block, HeatSource> heatSources,
+        Map<Block, BlockConfig> blocks,
         Map<Identifier, Double> armorIsolation,
-        Map<Block, Integer> extinguishableBurnoutSeconds,
         boolean torchesEnabled,
+        boolean useUnlitState,
         boolean torchRelightingEnabled,
         int torchRelightDurabilityCost
 ) implements CustomPacketPayload {
@@ -64,20 +64,24 @@ public record ConfigPayload(
     private static final StreamCodec<ByteBuf, Identifier> IDENTIFIER_CODEC =
             Identifier.STREAM_CODEC;
 
-    private static final StreamCodec<RegistryFriendlyByteBuf, HeatSource> HEAT_SOURCE_CODEC =
+    private static final StreamCodec<RegistryFriendlyByteBuf, BlockConfig> BLOCK_CONFIG_CODEC =
             StreamCodec.composite(
                     DOUBLE_CODEC,
-                    HeatSource::heat,
+                    BlockConfig::heat,
                     DOUBLE_CODEC,
-                    HeatSource::radiusSquared,
-                    HeatSource::new
+                    BlockConfig::radius,
+                    BOOL_CODEC,
+                    BlockConfig::extinguishable,
+                    INT_CODEC,
+                    BlockConfig::burnoutSeconds,
+                    BlockConfig::new
             );
 
-    private static final StreamCodec<RegistryFriendlyByteBuf, Map<Block, HeatSource>> HEAT_SOURCES_CODEC =
+    private static final StreamCodec<RegistryFriendlyByteBuf, Map<Block, BlockConfig>> BLOCKS_CODEC =
             ByteBufCodecs.map(
                     HashMap::new,
                     BLOCK_CODEC,
-                    HEAT_SOURCE_CODEC,
+                    BLOCK_CONFIG_CODEC,
                     256
             );
 
@@ -86,14 +90,6 @@ public record ConfigPayload(
                     HashMap::new,
                     IDENTIFIER_CODEC,
                     DOUBLE_CODEC,
-                    256
-            );
-
-    private static final StreamCodec<RegistryFriendlyByteBuf, Map<Block, Integer>> EXTINGUISHABLE_BURNOUT_CODEC =
-            ByteBufCodecs.map(
-                    HashMap::new,
-                    BLOCK_CODEC,
-                    INT_CODEC,
                     256
             );
 
@@ -108,14 +104,11 @@ public record ConfigPayload(
                         DOUBLE_CODEC.encode(buffer, payload.playerPowderSnowBoost());
                         STRING_CODEC.encode(buffer, payload.interpolation());
 
-                        HEAT_SOURCES_CODEC.encode(buffer, payload.heatSources());
+                        BLOCKS_CODEC.encode(buffer, payload.blocks());
                         ARMOR_ISOLATION_CODEC.encode(buffer, payload.armorIsolation());
-                        EXTINGUISHABLE_BURNOUT_CODEC.encode(
-                                buffer,
-                                payload.extinguishableBurnoutSeconds()
-                        );
 
                         BOOL_CODEC.encode(buffer, payload.torchesEnabled());
+                        BOOL_CODEC.encode(buffer, payload.useUnlitState());
                         BOOL_CODEC.encode(buffer, payload.torchRelightingEnabled());
                         INT_CODEC.encode(buffer, payload.torchRelightDurabilityCost());
                     },
@@ -128,10 +121,10 @@ public record ConfigPayload(
                             DOUBLE_CODEC.decode(buffer),
                             STRING_CODEC.decode(buffer),
 
-                            HEAT_SOURCES_CODEC.decode(buffer),
+                            BLOCKS_CODEC.decode(buffer),
                             ARMOR_ISOLATION_CODEC.decode(buffer),
-                            EXTINGUISHABLE_BURNOUT_CODEC.decode(buffer),
 
+                            BOOL_CODEC.decode(buffer),
                             BOOL_CODEC.decode(buffer),
                             BOOL_CODEC.decode(buffer),
                             INT_CODEC.decode(buffer)
@@ -147,10 +140,10 @@ public record ConfigPayload(
                 config.playerBurningBoost(),
                 config.playerPowderSnowBoost(),
                 config.interpolation().getName(),
-                config.heatSources(),
+                config.blocks(),
                 config.armorIsolation(),
-                config.extinguishableBurnoutSeconds(),
                 config.torchesEnabled(),
+                config.useUnlitState(),
                 config.torchRelightingEnabled(),
                 config.torchRelightDurabilityCost()
         );
@@ -165,10 +158,10 @@ public record ConfigPayload(
                 playerBurningBoost,
                 playerPowderSnowBoost,
                 InterpolationFunctions.by(interpolation),
-                heatSources,
+                blocks,
                 armorIsolation,
-                extinguishableBurnoutSeconds,
                 torchesEnabled,
+                useUnlitState,
                 torchRelightingEnabled,
                 torchRelightDurabilityCost
         );

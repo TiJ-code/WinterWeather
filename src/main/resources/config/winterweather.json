@@ -16,72 +16,89 @@
       }
     },
     "heat_sources": {
-      "minecraft:torch": {
-        "value": 1.0,
-        "radius": 3.0
+      "extinguishable": true,
+      "use_unlit_state": true,
+      "relight": {
+        "flint_and_steel": true,
+        "durability_cost": 1
       },
-      "minecraft:wall_torch": {
-        "value": 1.0,
-        "radius": 3.0
-      },
-      "minecraft:campfire": {
-        "value": 2.0,
-        "radius": 5.0
-      },
-      "minecraft:soul_campfire": {
-        "value": 2.0,
-        "radius": 3.0
-      },
-      "minecraft:fire": {
-        "value": 3.0,
-        "radius": 5.0
-      },
-      "minecraft:soul_fire": {
-        "value": 3.0,
-        "radius": 3.0
-      },
-      "minecraft:lava": {
-        "value": 3.0,
-        "radius": 7.0
-      },
-      "minecraft:lantern": {
-        "value": 1.0,
-        "radius": 2.0
-      }
-    }
-  },
-  "extinguishable_fire": {
-    "enabled": true,
-    "use_unlit_state": true,
-    "relight": {
-      "flint_and_steel": true,
-      "durability_cost": 1
-    },
-    "block_types": {
-      "minecraft:torch": {
-        "burnout_seconds": 300
-      },
-      "minecraft:wall_torch": {
-        "burnout_seconds": 300
-      },
-      "minecraft:soul_torch": {
-        "burnout_seconds": 3000
-      },
-      "minecraft:soul_wall_torch": {
-        "burnout_seconds": 3000
-      },
-      "minecraft:copper_torch": {
-        "burnout_seconds": 600
-      },
-      "minecraft:copper_wall_torch": {
-        "burnout_seconds": 600
-      },
-      "minecraft:campfire": {
-        "burnout_seconds": 600
-      },
-      "minecraft:soul_campfire": {
-        "burnout_seconds": 3000
-      }
+      "blocks": [
+        {
+          "value": 1.0,
+          "radius": 3.0,
+          "burnout_seconds": 300,
+          "variants": [
+            "minecraft:torch",
+            "minecraft:wall_torch"
+          ]
+        },
+        {
+          "value": 2.0,
+          "radius": 3.0,
+          "burnout_seconds": 3000,
+          "variants": [
+            "minecraft:soul_torch",
+            "minecraft:soul_wall_torch"
+          ]
+        },
+        {
+          "value": 1.5,
+          "radius": 3.5,
+          "burnout_seconds": 600,
+          "variants": [
+            "minecraft:copper_torch",
+            "minecraft:copper_wall_torch"
+          ]
+        },
+        {
+          "value": 2.0,
+          "radius": 5.0,
+          "burnout_seconds": 300,
+          "variants": [
+            "minecraft:campfire"
+          ]
+        },
+        {
+          "value": 2.0,
+          "radius": 6.0,
+          "burnout_seconds": 3000,
+          "variants": [
+            "minecraft:soul_campfire"
+          ]
+        },
+        {
+          "value": 3.0,
+          "radius": 5.0,
+          "burnout_seconds": 0,
+          "variants": [
+            "minecraft:fire"
+          ]
+        },
+        {
+          "value": 3.0,
+          "radius": 7.0,
+          "burnout_seconds": 0,
+          "variants": [
+            "minecraft:soul_fire"
+          ]
+        },
+        {
+          "value": 6.0,
+          "radius": 3.0,
+          "burnout_seconds": 0,
+          "variants": [
+            "minecraft:lava"
+          ]
+        },
+        {
+          "value": 1.0,
+          "radius": 5.0,
+          "burnout_seconds": 0,
+          "variants": [
+            "minecraft:lantern"
+          ]
+        }
+      ]
     }
   }
 }

@@ -83,5 +83,9 @@ public class WinterWeather implements ModInitializer {
         return INSTANCE == null ? null : INSTANCE.torchManager;
     }
 
+    public static boolean useUnlitState() {
+        return INSTANCE != null && INSTANCE.config != null && INSTANCE.config.useUnlitState();
+    }
+
     private static WinterWeather INSTANCE;
 }
