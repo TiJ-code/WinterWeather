@@ -69,7 +69,8 @@ public record FreezingConfig(
         boolean heatSourcesEnabled,
         boolean useUnlitState,
         boolean heatSourceRelightingEnabled,
-        int heatSourceRelightDurabilityCost
+        int heatSourceRelightDurabilityCost,
+        double glowstoneDurationMultiplier
 ) {
     public static final int MAX_FROZEN_TICKS = 140;
     /**
@@ -139,7 +140,8 @@ public record FreezingConfig(
                                                 "minecraft:waxed_exposed_copper_lantern",
                                                 "minecraft:waxed_weathered_copper_lantern",
                                                 "minecraft:waxed_oxidized_copper_lantern")
-                                )
+                                ),
+                                10
                         )
                 )
         );
@@ -239,7 +241,8 @@ public record FreezingConfig(
                 heatSources.extinguishable(),
                 heatSources.useUnlitState(),
                 heatSources.relight().flintAndSteel(),
-                Math.max(0, heatSources.relight().durabilityCost())
+                Math.max(0, heatSources.relight().durabilityCost()),
+                heatSources.glowstoneDurationMultiplier()
         );
     }
 

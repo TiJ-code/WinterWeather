@@ -161,6 +161,46 @@ public final class HeatSourceManager {
     }
 
     /**
+     * Extends a lit, finite-duration heat source by its configured multiplier.
+     *
+     * @param level server world containing the source
+     * @param pos source position
+     * @param state current source block state
+     * @return whether the burn duration was extended
+     */
+    public boolean applyGlowstone(ServerLevel level, BlockPos pos, BlockState state) {
+        double multiplier = config.get().glowstoneDurationMultiplier();
+        if (!config.get().heatSourcesEnabled() || !isExtinguishable(state)
+                || !isLit(state) || isLocked(level, pos) || burnoutTicks(state) <= 0
+                || multiplier <= 1) {
+            return false;
+        }
+
+        HeatSourceData data = HeatSourceData.get(level);
+        HeatSourceState previous = data.get(pos);
+        if (previous == null) {
+            int baseBurnoutTicks = burnoutTicks(state);
+            previous = new HeatSourceState(level.getGameTime() + baseBurnoutTicks);
+            data.set(pos, previous);
+        }
+        if (previous == null || previous.glowstoneBoosted()
+                || previous.extinguishAt() <= level.getGameTime()) {
+            return false;
+        }
+
+        long now = level.getGameTime();
+        long remaining = previous.extinguishAt() - now;
+        long maxRemaining = Long.MAX_VALUE - now;
+        long extendedRemaining = remaining > maxRemaining / multiplier
+                ? maxRemaining
+                : (long) (remaining * multiplier);
+        data.set(pos, previous.withGlowstoneBoosted(now + extendedRemaining));
+        level.playSound(null, pos, SoundEvents.EXPERIENCE_ORB_PICKUP,
+                SoundSource.BLOCKS, 0.8f, 1.15f);
+        return true;
+    }
+
+    /**
      * Performs the set locked operation.
      *
      * @param level  the level value

@@ -46,6 +46,22 @@ public final class HeatSourceInteraction {
         BlockPos pos = hit.getBlockPos();
         BlockState state = level.getBlockState(pos);
         ItemStack held = player.getItemInHand(hand);
+        if (held.is(Items.GLOWSTONE_DUST)
+                && hand == InteractionHand.MAIN_HAND
+                && manager.isExtinguishable(state)
+                && HeatSourceManager.isLit(state)) {
+            if (!(level instanceof ServerLevel serverLevel)) {
+                return InteractionResult.SUCCESS;
+            }
+            if (manager.applyGlowstone(serverLevel, pos, state)) {
+                if (!player.getAbilities().instabuild) {
+                    held.shrink(1);
+                }
+                return InteractionResult.SUCCESS;
+            }
+            return InteractionResult.PASS;
+        }
+
         if (!manager.isExtinguishable(state)
                 && !(held.is(Items.FLINT_AND_STEEL) && manager.isRelightable(state))) {
             return InteractionResult.PASS;
