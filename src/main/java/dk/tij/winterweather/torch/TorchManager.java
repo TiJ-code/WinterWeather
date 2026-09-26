@@ -61,7 +61,7 @@ public final class TorchManager {
         level.setBlock(pos, withLit(state, false), 3);
         TorchData data = TorchData.get(level);
         TorchState previous = data.get(pos);
-        data.set(pos, new TorchState(0, previous != null && previous.locked()));
+        data.set(pos, new TorchState(0, previous != null && previous.locked(), previous != null && previous.suppressSmoke()));
         level.playSound(null, pos, SoundEvents.CANDLE_EXTINGUISH, SoundSource.BLOCKS, 1, 1);
         return true;
     }
@@ -79,7 +79,7 @@ public final class TorchManager {
         long extinguishAt = !locked && burnoutTicks > 0
                 ? level.getGameTime() + burnoutTicks
                 : 0;
-        data.set(pos, new TorchState(extinguishAt, locked));
+        data.set(pos, new TorchState(extinguishAt, locked, previous != null && previous.suppressSmoke()));
         level.playSound(null, pos, SoundEvents.FLINTANDSTEEL_USE, SoundSource.BLOCKS, 1, 1);
         return true;
     }
@@ -109,8 +109,24 @@ public final class TorchManager {
             }
         }
 
-        data.set(pos, new TorchState(extinguishAt, locked));
+        data.set(pos, new TorchState(extinguishAt, locked, previous.suppressSmoke()));
         return true;
+    }
+
+    public boolean setSmokeSuppressed(ServerLevel level, BlockPos pos, boolean suppressed) {
+        if (!(level.getBlockState(pos).getBlock() instanceof CampfireBlock)) {
+            return false;
+        }
+        TorchData data = TorchData.get(level);
+        TorchState previous = data.get(pos);
+        if (previous == null) previous = new TorchState(0);
+        data.set(pos, previous.withSmokeSuppressed(suppressed));
+        return true;
+    }
+
+    public boolean isSmokeSuppressed(ServerLevel level, BlockPos pos) {
+        TorchState state = TorchData.get(level).get(pos);
+        return state != null && state.suppressSmoke();
     }
 
     public void tick(ServerLevel level) {

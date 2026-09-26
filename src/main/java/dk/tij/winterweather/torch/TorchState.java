@@ -1,8 +1,12 @@
 package dk.tij.winterweather.torch;
 
-public record TorchState(long extinguishAt, boolean locked) {
+public record TorchState(long extinguishAt, boolean locked, boolean suppressSmoke) {
     public TorchState(long extinguishAt) {
-        this(extinguishAt, false);
+        this(extinguishAt, false, false);
+    }
+
+    public TorchState(long extinguishAt, boolean locked) {
+        this(extinguishAt, locked, false);
     }
 
     public boolean isExpired(long gameTime) {
@@ -18,10 +22,14 @@ public record TorchState(long extinguishAt, boolean locked) {
     }
 
     public TorchState withLocked(boolean locked) {
-        return new TorchState(extinguishAt, locked);
+        return new TorchState(extinguishAt, locked, suppressSmoke);
     }
 
     public TorchState withExtinguishAt(long extinguishAt) {
-        return new TorchState(extinguishAt, locked);
+        return new TorchState(extinguishAt, locked, suppressSmoke);
+    }
+
+    public TorchState withSmokeSuppressed(boolean suppressSmoke) {
+        return new TorchState(extinguishAt, locked, suppressSmoke);
     }
 }

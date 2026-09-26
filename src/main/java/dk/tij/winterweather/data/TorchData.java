@@ -18,14 +18,15 @@ public final class TorchData extends SavedData {
     private static final Codec<Entry> ENTRY_CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.LONG.fieldOf("pos").forGetter(Entry::pos),
             Codec.LONG.fieldOf("extinguish_at").forGetter(Entry::extinguishAt),
-            Codec.BOOL.optionalFieldOf("locked", false).forGetter(Entry::locked)
+            Codec.BOOL.optionalFieldOf("locked", false).forGetter(Entry::locked),
+            Codec.BOOL.optionalFieldOf("suppress_smoke", false).forGetter(Entry::suppressSmoke)
     ).apply(instance, Entry::new));
     private static final Codec<TorchData> CODEC = ENTRY_CODEC.listOf()
             .xmap(TorchData::new, data -> data.entries().stream()
                     .map(entry -> new Entry(
                             entry.getKey(),
                             entry.getValue().extinguishAt(),
-                            entry.getValue().locked()))
+                            entry.getValue().locked(), entry.getValue().suppressSmoke()))
                     .toList());
     private static final SavedDataType<TorchData> TYPE = new SavedDataType<>(
             Identifier.parse("winterweather/torches"),
@@ -41,7 +42,7 @@ public final class TorchData extends SavedData {
 
     private TorchData(java.util.List<Entry> entries) {
         for (Entry entry : entries) {
-            this.entries.put(entry.pos(), new TorchState(entry.extinguishAt(), entry.locked()));
+            this.entries.put(entry.pos(), new TorchState(entry.extinguishAt(), entry.locked(), entry.suppressSmoke()));
         }
     }
 
@@ -68,6 +69,6 @@ public final class TorchData extends SavedData {
         }
     }
 
-    private record Entry(long pos, long extinguishAt, boolean locked) {
+    private record Entry(long pos, long extinguishAt, boolean locked, boolean suppressSmoke) {
     }
 }

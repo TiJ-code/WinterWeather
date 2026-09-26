@@ -2,10 +2,12 @@ package dk.tij.winterweather.client;
 
 import dk.tij.winterweather.config.FreezingConfig;
 import dk.tij.winterweather.network.ConfigPayload;
+import dk.tij.winterweather.network.CampfireSmokePayload;
 import dk.tij.winterweather.network.HeatStatePayload;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.level.block.Blocks;
@@ -19,12 +21,17 @@ public class WinterWeatherClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> CampfireSmokeState.clear());
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> CampfireSmokeState.clear());
         ClientPlayNetworking.registerGlobalReceiver(HeatStatePayload.TYPE, (payload, context) ->
                 context.client().execute(() -> HeatStatePayloadState.updateFromServer(
                         payload.enabled(), Math.max(0, payload.actualFreezeTicks()))));
 
         ClientPlayNetworking.registerGlobalReceiver(ConfigPayload.TYPE, (payload, context) ->
                 context.client().execute(() -> config = payload.toConfig()));
+        ClientPlayNetworking.registerGlobalReceiver(CampfireSmokePayload.TYPE, (payload, context) ->
+                context.client().execute(() -> CampfireSmokeState.set(
+                        payload.dimension(), payload.pos(), payload.suppressed())));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player == null || client.level == null) {
