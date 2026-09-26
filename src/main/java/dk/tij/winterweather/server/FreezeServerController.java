@@ -3,12 +3,10 @@ package dk.tij.winterweather.server;
 import dk.tij.winterweather.config.FreezingConfig;
 import dk.tij.winterweather.state.FreezeStateManager;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
-
 import java.util.function.BooleanSupplier;
 
 public final class FreezeServerController {
@@ -31,10 +29,6 @@ public final class FreezeServerController {
                     && state.get(player.getUUID()) > config.criticalFreezingTicks()
                     && !wearsInsulatedArmor(player, config)) {
                 player.hurt(player.damageSources().freeze(), 1);
-            }
-            if (state.debug(player.getUUID())) {
-                player.sendSystemMessage(Component.literal(
-                        String.format("Freeze: %.2f", state.get(player.getUUID()))), true);
             }
         }
 

@@ -26,6 +26,7 @@ public final class FreezeNetworking {
         PayloadTypeRegistry.serverboundPlay().register(ConfigPayload.TYPE, ConfigPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ConfigPayload.TYPE, ConfigPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(CampfireSmokePayload.TYPE, CampfireSmokePayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(DebugStatePayload.TYPE, DebugStatePayload.CODEC);
 
         ServerPlayNetworking.registerGlobalReceiver(HeatStatePayload.TYPE, (payload, context) ->
                 context.server().execute(() -> {
@@ -47,7 +48,6 @@ public final class FreezeNetworking {
                 if (!dimension.equals(syncedDimensions.put(player.getUUID(), dimension))) {
                     sendCampfireSmoke(player);
                 }
-                if (server.getTickCount() % 100 == 0) sendState(player, state, config.current());
             }
         });
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
@@ -85,6 +85,11 @@ public final class FreezeNetworking {
         ServerPlayNetworking.send(player,
                 new HeatStatePayload(config.enabled(), state.get(player.getUUID())));
         ServerPlayNetworking.send(player, ConfigPayload.from(config));
+        sendDebugState(player, state.debug(player.getUUID()));
+    }
+
+    public static void sendDebugState(ServerPlayer player, boolean enabled) {
+        ServerPlayNetworking.send(player, new DebugStatePayload(enabled));
     }
 
     public interface FreezingConfigProvider {

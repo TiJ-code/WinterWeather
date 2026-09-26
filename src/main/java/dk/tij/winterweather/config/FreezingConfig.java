@@ -244,11 +244,13 @@ public record FreezingConfig(
     }
 
     public int toFrozenTicks(double actualFreezeTicks) {
+        return Math.clamp((int) (toFrozenProgress(actualFreezeTicks) * MAX_FROZEN_TICKS + 0.5),
+                0, MAX_FROZEN_TICKS);
+    }
+
+    public float toFrozenProgress(double actualFreezeTicks) {
         double progress = Math.clamp(actualFreezeTicks / criticalFreezingTicks, 0, 1);
-        return Math.clamp(
-                (int) (interpolation.apply(progress) * MAX_FROZEN_TICKS + 0.5),
-                0, MAX_FROZEN_TICKS
-        );
+        return (float) Math.clamp(interpolation.apply(progress), 0, 1);
     }
 
     public boolean isExtinguishable(BlockState state) {
