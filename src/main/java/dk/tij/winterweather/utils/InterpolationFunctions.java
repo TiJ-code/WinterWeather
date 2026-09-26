@@ -2,12 +2,20 @@ package dk.tij.winterweather.utils;
 
 import java.util.function.Function;
 
+/**
+ * Available interpolation functions values.
+ */
 public enum InterpolationFunctions {
     LINEAR("linear", value -> value),
     SMOOTHSTEP("smoothstep", value -> value * value * (3f - 2f * value)),
     SMOOTHERSTEP("smootherstep", value -> value * value * value * (value * (value * 6 - 15) + 10));
-
+    /**
+     * Stores the name value.
+     */
     private final String name;
+    /**
+     * Stores the function value.
+     */
     private final Function<Double, Double> function;
 
     InterpolationFunctions(String name, Function<Double, Double> function) {
@@ -15,18 +23,11 @@ public enum InterpolationFunctions {
         this.function = function;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public Function<Double, Double> getFunction() {
-        return function;
-    }
-
-    public double apply(double value) {
-        return function.apply(value);
-    }
-
+    /**
+     * Performs the by operation.
+     *
+     * @param name the name value
+     */
     public static InterpolationFunctions by(String name) {
         for (InterpolationFunctions func : InterpolationFunctions.values()) {
             if (func.getName().equals(name)) {
@@ -34,5 +35,28 @@ public enum InterpolationFunctions {
             }
         }
         return SMOOTHERSTEP;
+    }
+
+    /**
+     * Returns the name value.
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Returns the function value.
+     */
+    public Function<Double, Double> getFunction() {
+        return function;
+    }
+
+    /**
+     * Performs the apply operation.
+     *
+     * @param value the value value
+     */
+    public double apply(double value) {
+        return function.apply(value);
     }
 }

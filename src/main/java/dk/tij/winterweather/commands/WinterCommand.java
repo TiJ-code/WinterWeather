@@ -1,12 +1,12 @@
 package dk.tij.winterweather.commands;
 
-import dk.tij.winterweather.WinterWeather;
-import dk.tij.winterweather.heat.HeatSourceManager;
-import dk.tij.winterweather.network.FreezeNetworking;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import dk.tij.winterweather.WinterWeather;
+import dk.tij.winterweather.heat.HeatSourceManager;
+import dk.tij.winterweather.network.FreezeNetworking;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -24,9 +24,21 @@ import net.minecraft.world.phys.HitResult;
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
+/**
+ * Provides winter command functionality for Winter Weather.
+ */
 public final class WinterCommand {
-    private WinterCommand() {}
+    /**
+     * Performs the winter command operation.
+     */
+    private WinterCommand() {
+    }
 
+    /**
+     * Performs the register operation.
+     *
+     * @param mod the mod value
+     */
     public static void register(WinterWeather mod) {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 dispatcher.register(Commands.literal("winter")
@@ -34,16 +46,19 @@ public final class WinterCommand {
                                 && permissions.level().isEqualOrHigherThan(PermissionLevel.GAMEMASTERS))
                         .then(literal("start").executes(context -> {
                             mod.setEnabled(true);
+                            mod.syncClients(context.getSource().getServer());
                             FreezeNetworking.broadcastWinterStart(context.getSource().getServer());
                             return 1;
                         }))
                         .then(literal("stop").executes(context -> {
                             mod.setEnabled(false);
+                            mod.syncClients(context.getSource().getServer());
                             context.getSource().sendSuccess(() -> Component.literal("Winter has stopped."), true);
                             return 1;
                         }))
                         .then(literal("reload").executes(context -> {
                             mod.reload();
+                            mod.syncClients(context.getSource().getServer());
                             context.getSource().sendSuccess(() -> Component.literal("Configuration reloaded."), true);
                             return 1;
                         }))
@@ -85,6 +100,7 @@ public final class WinterCommand {
                         .then(literal("config")
                                 .then(literal("reload").executes(context -> {
                                     mod.reload();
+                                    mod.syncClients(context.getSource().getServer());
                                     context.getSource().sendSuccess(() -> Component.literal("Configuration reloaded."), true);
                                     return 1;
                                 }))
@@ -98,6 +114,7 @@ public final class WinterCommand {
                                                         return 0;
                                                     }
                                                     mod.reload();
+                                                    mod.syncClients(context.getSource().getServer());
                                                     context.getSource().sendSuccess(() -> Component.literal("Configuration updated."), true);
                                                     return 1;
                                                 }))))
@@ -116,6 +133,12 @@ public final class WinterCommand {
                 ));
     }
 
+    /**
+     * Performs the set locked looking at operation.
+     *
+     * @param context the context value
+     * @param locked  the locked value
+     */
     private static int setLockedLookingAt(CommandContext<CommandSourceStack> context, boolean locked)
             throws CommandSyntaxException {
         ServerPlayer player = context.getSource().getPlayerOrException();
@@ -127,29 +150,32 @@ public final class WinterCommand {
         return setLocked(context.getSource(), blockHit.getBlockPos(), locked);
     }
 
+    /**
+     * Performs the set locked operation.
+     *
+     * @param source the source value
+     * @param pos    the pos value
+     * @param locked the locked value
+     */
     private static int setLocked(CommandSourceStack source, BlockPos pos, boolean locked) {
         if (!(source.getLevel() instanceof ServerLevel level)) {
             source.sendFailure(Component.literal("This command can only be used in-game."));
             return 0;
         }
-
         HeatSourceManager manager = WinterWeather.heatSourceManagerOrNull();
         if (manager == null) {
             source.sendFailure(Component.literal("Heat source manager is not available."));
             return 0;
         }
-
         BlockState state = level.getBlockState(pos);
         if (!manager.isExtinguishable(state)) {
             source.sendFailure(Component.literal("That block is not an extinguishable heat source."));
             return 0;
         }
-
         if (!manager.setLocked(level, pos, locked)) {
             source.sendFailure(Component.literal("Could not update lock state."));
             return 0;
         }
-
         String action = locked ? "Locked" : "Unlocked";
         source.sendSuccess(
                 () -> Component.literal(action + " heat source at " + pos.getX() + ", " + pos.getY() + ", " + pos.getZ()),
@@ -158,6 +184,13 @@ public final class WinterCommand {
         return 1;
     }
 
+    /**
+     * Performs the set campfire smoke operation.
+     *
+     * @param context    the context value
+     * @param suppressed the suppressed value
+     * @param target     the target value
+     */
     private static int setCampfireSmoke(CommandContext<CommandSourceStack> context, boolean suppressed, BlockPos target) {
         CommandSourceStack source = context.getSource();
         if (!(source.getLevel() instanceof ServerLevel level)) {
@@ -179,7 +212,6 @@ public final class WinterCommand {
             }
             target = blockHit.getBlockPos();
         }
-
         HeatSourceManager manager = WinterWeather.heatSourceManagerOrNull();
         if (manager == null || !manager.setSmokeSuppressed(level, target, suppressed)) {
             source.sendFailure(Component.literal("That block is not a campfire."));
@@ -195,6 +227,12 @@ public final class WinterCommand {
         return 1;
     }
 
+    /**
+     * Performs the toggle debug operation.
+     *
+     * @param player the player value
+     * @param mod    the mod value
+     */
     private static int toggleDebug(ServerPlayer player, WinterWeather mod) {
         boolean value = !mod.freezeState().debug(player.getUUID());
         mod.freezeState().setDebug(player.getUUID(), value);

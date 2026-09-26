@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import dk.tij.winterweather.heat.HeatSourceBlocks;
 import dk.tij.winterweather.server.config.BlockConfig;
 import dk.tij.winterweather.server.config.ConfigParseException;
 import dk.tij.winterweather.server.config.FrostConfig;
@@ -15,7 +16,6 @@ import dk.tij.winterweather.server.config.HeatSourcesConfig;
 import dk.tij.winterweather.server.config.IsolationConfig;
 import dk.tij.winterweather.server.config.WinterWeatherConfig;
 import dk.tij.winterweather.server.config.WinterWeatherConfigLoader;
-import dk.tij.winterweather.heat.HeatSourceBlocks;
 import dk.tij.winterweather.utils.InterpolationFunctions;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;
@@ -36,6 +36,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
+/**
+ * Configuration values for freezing.
+ *
+ * @param enabled                         the enabled value
+ * @param criticalFreezingTicks           the critical freezing ticks value
+ * @param playerRadius                    the player radius value
+ * @param maxPossibleIsolation            the max possible isolation value
+ * @param playerBurningBoost              the player burning boost value
+ * @param playerPowderSnowBoost           the player powder snow boost value
+ * @param interpolation                   the interpolation value
+ * @param Block                           the block value
+ * @param blocks                          the blocks value
+ * @param Identifier                      the identifier value
+ * @param armorIsolation                  the armor isolation value
+ * @param heatSourcesEnabled              the heat sources enabled value
+ * @param useUnlitState                   the use unlit state value
+ * @param heatSourceRelightingEnabled     the heat source relighting enabled value
+ * @param heatSourceRelightDurabilityCost the heat source relight durability cost value
+ */
 public record FreezingConfig(
         boolean enabled,
         int criticalFreezingTicks,
@@ -52,15 +72,29 @@ public record FreezingConfig(
         int heatSourceRelightDurabilityCost
 ) {
     public static final int MAX_FROZEN_TICKS = 140;
-
+    /**
+     * Returns the logger value.
+     */
     private static final Logger LOGGER = LoggerFactory.getLogger("WinterWeather");
+    /**
+     * Performs the gson builder operation.
+     */
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    /**
+     * Returns the instance value.
+     */
     private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("winterweather.json");
 
+    /**
+     * Performs the defaults operation.
+     */
     private static FreezingConfig defaults() {
         return from(defaultWinterWeatherConfig());
     }
 
+    /**
+     * Performs the default winter weather config operation.
+     */
     private static WinterWeatherConfig defaultWinterWeatherConfig() {
         return new WinterWeatherConfig(
                 false,
@@ -111,6 +145,14 @@ public record FreezingConfig(
         );
     }
 
+    /**
+     * Performs the heat source operation.
+     *
+     * @param value          the value value
+     * @param radius         the radius value
+     * @param burnoutSeconds the burnout seconds value
+     * @param blockIds       the block ids value
+     */
     private static HeatSourceConfig heatSource(
             double value,
             double radius,
@@ -127,6 +169,9 @@ public record FreezingConfig(
         );
     }
 
+    /**
+     * Performs the load operation.
+     */
     public static FreezingConfig load() {
         try {
             if (Files.notExists(CONFIG_PATH)) {
@@ -146,10 +191,14 @@ public record FreezingConfig(
         }
     }
 
+    /**
+     * Performs the from operation.
+     *
+     * @param config the config value
+     */
     public static FreezingConfig from(WinterWeatherConfig config) {
         FrostConfig frost = config.frost();
         HeatSourcesConfig heatSources = frost.heatSources();
-
         Map<Block, BlockConfig> blocks = new HashMap<>();
         for (HeatSourceConfig source : heatSources.blocks()) {
             boolean extinguishable = heatSources.extinguishable();
@@ -170,7 +219,6 @@ public record FreezingConfig(
                 ));
             }
         }
-
         Map<Identifier, Double> armor = new HashMap<>();
         for (var entry : frost.isolation().armorPieces().entrySet()) {
             Identifier id = Identifier.tryParse(entry.getKey());
@@ -178,7 +226,6 @@ public record FreezingConfig(
                 armor.put(id, Math.max(0, Math.min(1, entry.getValue() / 100)));
             }
         }
-
         return new FreezingConfig(
                 config.enabled(),
                 Math.max(1, frost.criticalFreezingTicks()),
@@ -196,6 +243,11 @@ public record FreezingConfig(
         );
     }
 
+    /**
+     * Returns the value value.
+     *
+     * @param path the path value
+     */
     public static JsonElement getValue(String path) {
         try {
             JsonElement current = JsonParser.parseString(Files.readString(CONFIG_PATH));
@@ -209,62 +261,12 @@ public record FreezingConfig(
         }
     }
 
-    public double temperatureDelta(Level level, BlockPos playerBlockPos, Vec3 playerPos, Vec3 eyePos,
-                                   List<Identifier> armorItems, boolean burning, int powderSnowBlocks) {
-        double heat = 0;
-        int radius = (int) Math.ceil(playerRadius);
-        for (BlockPos candidate : BlockPos.betweenClosed(
-                playerBlockPos.offset(-radius, -radius, -radius),
-                playerBlockPos.offset(radius, radius, radius))) {
-            var state = level.getBlockState(candidate);
-            if (!dk.tij.winterweather.heat.HeatSourceManager.isLit(state)) {
-                continue;
-            }
-            BlockConfig source = blocks.get(state.getBlock());
-            if (source == null || candidate.getCenter().distanceToSqr(playerPos) > source.radiusSquared()) {
-                continue;
-            }
-            heat += source.heat();
-        }
-
-        double change = heat > 0 ? -heat : 1;
-        if (change > 0) {
-            double isolation = armorItems.stream().mapToDouble(item -> armorIsolation.getOrDefault(item, 0d))
-                    .sum() * maxPossibleIsolation;
-            change *= 1 - Math.min(1, isolation);
-        }
-        if (burning) {
-            change = change < 0 ? change - (3 * playerBurningBoost) : change - playerBurningBoost;
-        }
-        if (powderSnowBlocks > 0) {
-            double powderSnow = Math.pow(1.225, powderSnowBlocks) * playerPowderSnowBoost;
-            change = change < 0 ? powderSnow : change + powderSnow;
-        }
-        return change;
-    }
-
-    public int toFrozenTicks(double actualFreezeTicks) {
-        return Math.clamp((int) (toFrozenProgress(actualFreezeTicks) * MAX_FROZEN_TICKS + 0.5),
-                0, MAX_FROZEN_TICKS);
-    }
-
-    public float toFrozenProgress(double actualFreezeTicks) {
-        double progress = Math.clamp(actualFreezeTicks / criticalFreezingTicks, 0, 1);
-        return (float) Math.clamp(interpolation.apply(progress), 0, 1);
-    }
-
-    public boolean isExtinguishable(BlockState state) {
-        BlockConfig config = blocks.get(state.getBlock());
-        return config != null && config.extinguishable()
-                && (state.hasProperty(HeatSourceBlocks.LIT)
-                || state.hasProperty(net.minecraft.world.level.block.CampfireBlock.LIT));
-    }
-
-    public int extinguishableBurnoutSeconds(BlockState state) {
-        BlockConfig config = blocks.get(state.getBlock());
-        return config == null ? 0 : config.burnoutSeconds();
-    }
-
+    /**
+     * Performs the set value operation.
+     *
+     * @param path     the path value
+     * @param rawValue the raw value value
+     */
     public static boolean setValue(String path, String rawValue) {
         try {
             JsonElement root = JsonParser.parseString(Files.readString(CONFIG_PATH));
@@ -284,6 +286,11 @@ public record FreezingConfig(
         }
     }
 
+    /**
+     * Performs the parse value operation.
+     *
+     * @param value the value value
+     */
     private static JsonElement parseValue(String value) {
         if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
             return new JsonPrimitive(Boolean.parseBoolean(value));
@@ -299,6 +306,97 @@ public record FreezingConfig(
         }
     }
 
+    /**
+     * Performs the temperature delta operation.
+     *
+     * @param level            the level value
+     * @param playerBlockPos   the player block pos value
+     * @param playerPos        the player pos value
+     * @param eyePos           the eye pos value
+     * @param armorItems       the armor items value
+     * @param burning          the burning value
+     * @param powderSnowBlocks the powder snow blocks value
+     */
+    public double temperatureDelta(Level level, BlockPos playerBlockPos, Vec3 playerPos, Vec3 eyePos,
+                                   List<Identifier> armorItems, boolean burning, int powderSnowBlocks) {
+        double heat = 0;
+        int radius = (int) Math.ceil(playerRadius);
+        for (BlockPos candidate : BlockPos.betweenClosed(
+                playerBlockPos.offset(-radius, -radius, -radius),
+                playerBlockPos.offset(radius, radius, radius))) {
+            var state = level.getBlockState(candidate);
+            if (!dk.tij.winterweather.heat.HeatSourceManager.isLit(state)) {
+                continue;
+            }
+            BlockConfig source = blocks.get(state.getBlock());
+            if (source == null || candidate.getCenter().distanceToSqr(playerPos) > source.radiusSquared()) {
+                continue;
+            }
+            heat += source.heat();
+        }
+        double change = heat > 0 ? -heat : 1;
+        if (change > 0) {
+            double isolation = armorItems.stream().mapToDouble(item -> armorIsolation.getOrDefault(item, 0d))
+                    .sum() * maxPossibleIsolation;
+            change *= 1 - Math.min(1, isolation);
+        }
+        if (burning) {
+            change = change < 0 ? change - (3 * playerBurningBoost) : change - playerBurningBoost;
+        }
+        if (powderSnowBlocks > 0) {
+            double powderSnow = Math.pow(1.225, powderSnowBlocks) * playerPowderSnowBoost;
+            change = change < 0 ? powderSnow : change + powderSnow;
+        }
+        return change;
+    }
+
+    /**
+     * Performs the to frozen ticks operation.
+     *
+     * @param actualFreezeTicks the actual freeze ticks value
+     */
+    public int toFrozenTicks(double actualFreezeTicks) {
+        return Math.clamp((int) (toFrozenProgress(actualFreezeTicks) * MAX_FROZEN_TICKS + 0.5),
+                0, MAX_FROZEN_TICKS);
+    }
+
+    /**
+     * Performs the to frozen progress operation.
+     *
+     * @param actualFreezeTicks the actual freeze ticks value
+     */
+    public float toFrozenProgress(double actualFreezeTicks) {
+        double progress = Math.clamp(actualFreezeTicks / criticalFreezingTicks, 0, 1);
+        return (float) Math.clamp(interpolation.apply(progress), 0, 1);
+    }
+
+    /**
+     * Reports whether extinguishable is true.
+     *
+     * @param state the state value
+     */
+    public boolean isExtinguishable(BlockState state) {
+        BlockConfig config = blocks.get(state.getBlock());
+        return config != null && config.extinguishable()
+                && (state.hasProperty(HeatSourceBlocks.LIT)
+                || state.hasProperty(net.minecraft.world.level.block.CampfireBlock.LIT));
+    }
+
+    /**
+     * Performs the extinguishable burnout seconds operation.
+     *
+     * @param state the state value
+     */
+    public int extinguishableBurnoutSeconds(BlockState state) {
+        BlockConfig config = blocks.get(state.getBlock());
+        return config == null ? 0 : config.burnoutSeconds();
+    }
+
+    /**
+     * Reports whether insulated armor is true.
+     *
+     * @param item the item value
+     */
     public boolean isInsulatedArmor(Identifier item) {
         return armorIsolation.containsKey(item);
     }

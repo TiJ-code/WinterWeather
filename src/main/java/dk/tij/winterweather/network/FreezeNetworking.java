@@ -1,5 +1,6 @@
 package dk.tij.winterweather.network;
 
+import dk.tij.winterweather.announcement.WinterWeatherBranding;
 import dk.tij.winterweather.config.FreezingConfig;
 import dk.tij.winterweather.config.WinterStartAnnouncementConfig;
 import dk.tij.winterweather.state.FreezeStateManager;
@@ -9,17 +10,30 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Provides freeze networking functionality for Winter Weather.
+ */
 public final class FreezeNetworking {
-    private FreezeNetworking() {}
+    /**
+     * Performs the freeze networking operation.
+     */
+    private FreezeNetworking() {
+    }
 
+    /**
+     * Performs the register operation.
+     *
+     * @param state  the state value
+     * @param config the config value
+     */
     public static void register(FreezeStateManager state, FreezingConfigProvider config) {
         Map<UUID, ResourceKey<Level>> syncedDimensions = new HashMap<>();
         PayloadTypeRegistry.serverboundPlay().register(HeatStatePayload.TYPE, HeatStatePayload.CODEC);
@@ -29,14 +43,12 @@ public final class FreezeNetworking {
         PayloadTypeRegistry.clientboundPlay().register(CampfireSmokePayload.TYPE, CampfireSmokePayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(DebugStatePayload.TYPE, DebugStatePayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(WinterStartPayload.TYPE, WinterStartPayload.CODEC);
-
         ServerPlayNetworking.registerGlobalReceiver(HeatStatePayload.TYPE, (payload, context) ->
                 context.server().execute(() -> {
                     if (config.current().enabled()) {
                         state.accept(context.player().getUUID(), payload.actualFreezeTicks());
                     }
                 }));
-
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayer player = handler.getPlayer();
             state.register(player);
@@ -67,13 +79,25 @@ public final class FreezeNetworking {
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> state.saveAll());
     }
 
+    /**
+     * Performs the send campfire smoke operation.
+     *
+     * @param player     the player value
+     * @param pos        the pos value
+     * @param suppressed the suppressed value
+     */
     public static void sendCampfireSmoke(ServerPlayer player, net.minecraft.core.BlockPos pos, boolean suppressed) {
         ServerPlayNetworking.send(player, new CampfireSmokePayload(
                 player.level().dimension().identifier(), pos, suppressed));
     }
 
+    /**
+     * Performs the send campfire smoke operation.
+     *
+     * @param player the player value
+     */
     private static void sendCampfireSmoke(ServerPlayer player) {
-        var data = dk.tij.winterweather.data.HeatSourceData.get((ServerLevel) player.level());
+        var data = dk.tij.winterweather.data.HeatSourceData.get(player.level());
         for (var entry : data.entries()) {
             if (entry.getValue().suppressSmoke()) {
                 ServerPlayNetworking.send(player,
@@ -83,48 +107,64 @@ public final class FreezeNetworking {
         }
     }
 
+    /**
+     * Performs the send state operation.
+     *
+     * @param player the player value
+     * @param state  the state value
+     * @param config the config value
+     */
     private static void sendState(ServerPlayer player, FreezeStateManager state, FreezingConfig config) {
+        // Send config first so the client has current parameters before ticking freeze progress.
+        ServerPlayNetworking.send(player, ConfigPayload.from(config));
         ServerPlayNetworking.send(player,
                 new HeatStatePayload(config.enabled(), state.get(player.getUUID())));
-        ServerPlayNetworking.send(player, ConfigPayload.from(config));
         sendDebugState(player, state.debug(player.getUUID()));
     }
 
+    /** Sends the current config and freeze state to every connected player. */
+    public static void syncAll(net.minecraft.server.MinecraftServer server,
+                               FreezeStateManager state,
+                               FreezingConfig config) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            sendState(player, state, config);
+        }
+    }
+
+    /**
+     * Performs the send debug state operation.
+     *
+     * @param player  the player value
+     * @param enabled the enabled value
+     */
     public static void sendDebugState(ServerPlayer player, boolean enabled) {
         ServerPlayNetworking.send(player, new DebugStatePayload(enabled));
     }
 
+    /**
+     * Performs the broadcast winter start operation.
+     *
+     * @param server the server value
+     */
     public static void broadcastWinterStart(net.minecraft.server.MinecraftServer server) {
         WinterStartAnnouncementConfig announcement = WinterStartAnnouncementConfig.load();
-        var message = net.minecraft.network.chat.Component.literal(announcement.chatMessage())
+        var message = net.minecraft.network.chat.Component.literal(announcement.chat().message())
                 .withStyle(style -> style.withColor(net.minecraft.ChatFormatting.AQUA).withBold(true));
         server.getPlayerList().broadcastSystemMessage(message, false);
-        for (String line : announcement.chatExtraLines()) {
+        for (String line : announcement.chat().extraLines()) {
             server.getPlayerList().broadcastSystemMessage(
                     net.minecraft.network.chat.Component.literal(line)
                             .withStyle(net.minecraft.ChatFormatting.GRAY), false);
         }
-        var authorLine = net.minecraft.network.chat.Component.literal("Created by ")
-                .withStyle(net.minecraft.ChatFormatting.DARK_GRAY)
-                .append(net.minecraft.network.chat.Component.literal("TiJ-code")
-                        .withStyle(style -> style
-                                .withColor(net.minecraft.ChatFormatting.AQUA)
-                                .withUnderlined(true)
-                                .withClickEvent(new net.minecraft.network.chat.ClickEvent.OpenUrl(
-                                        java.net.URI.create("https://github.com/TiJ-code/WinterWeather")))
-                                .withHoverEvent(new net.minecraft.network.chat.HoverEvent.ShowText(
-                                        net.minecraft.network.chat.Component.literal("Open the WinterWeather repository")))));
-        server.getPlayerList().broadcastSystemMessage(authorLine, false);
+        server.getPlayerList().broadcastSystemMessage(WinterWeatherBranding.chatAttribution(), false);
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            ServerPlayNetworking.send(player, new WinterStartPayload(
-                    announcement.chatMessage(),
-                    announcement.chatExtraLines(),
-                    announcement.bannerTitle(),
-                    announcement.bannerSubtitle(),
-                    announcement.bannerExtraLines()));
+            ServerPlayNetworking.send(player, new WinterStartPayload(announcement.toJson()));
         }
     }
 
+    /**
+     * Provides freezing config provider functionality for Winter Weather.
+     */
     public interface FreezingConfigProvider {
         FreezingConfig current();
     }

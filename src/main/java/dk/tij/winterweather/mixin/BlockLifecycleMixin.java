@@ -13,8 +13,21 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Mixin hooks that connect block lifecycle behavior to Winter Weather.
+ */
 @Mixin(Block.class)
 public abstract class BlockLifecycleMixin {
+    /**
+     * Performs the winterweather$track placed heat source operation.
+     *
+     * @param level        the level value
+     * @param pos          the pos value
+     * @param state        the state value
+     * @param placer       the placer value
+     * @param stack        the stack value
+     * @param callbackInfo the callback info value
+     */
     @Inject(method = "setPlacedBy", at = @At("TAIL"))
     private void winterweather$trackPlacedHeatSource(
             Level level, BlockPos pos, BlockState state, LivingEntity placer,
@@ -26,6 +39,14 @@ public abstract class BlockLifecycleMixin {
         }
     }
 
+    /**
+     * Performs the winterweather$remove broken heat source operation.
+     *
+     * @param level        the level value
+     * @param pos          the pos value
+     * @param state        the state value
+     * @param callbackInfo the callback info value
+     */
     @Inject(method = "destroy", at = @At("TAIL"))
     private void winterweather$removeBrokenHeatSource(
             LevelAccessor level, BlockPos pos, BlockState state, CallbackInfo callbackInfo

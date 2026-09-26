@@ -1,25 +1,47 @@
 package dk.tij.winterweather.client;
 
 import dk.tij.winterweather.config.FreezingConfig;
-import dk.tij.winterweather.network.ConfigPayload;
+import dk.tij.winterweather.config.WinterStartAnnouncementConfig;
 import dk.tij.winterweather.network.CampfireSmokePayload;
+import dk.tij.winterweather.network.ConfigPayload;
 import dk.tij.winterweather.network.DebugStatePayload;
 import dk.tij.winterweather.network.HeatStatePayload;
 import dk.tij.winterweather.network.WinterStartPayload;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.level.block.Blocks;
 
 import java.util.ArrayList;
-import net.minecraft.network.chat.Component;
 
+/**
+ * Provides winter weather client functionality for Winter Weather.
+ */
 public class WinterWeatherClient implements ClientModInitializer {
+    /**
+     * Stores the config value.
+     */
     private FreezingConfig config;
 
+    /**
+     * Performs the powder snow blocks operation.
+     *
+     * @param client the client value
+     */
+    private static int powderSnowBlocks(net.minecraft.client.Minecraft client) {
+        int blocks = 0;
+        if (client.level.getBlockState(client.player.blockPosition()).is(Blocks.POWDER_SNOW)) blocks++;
+        if (client.level.getBlockState(client.player.blockPosition().above()).is(Blocks.POWDER_SNOW)) blocks++;
+        return blocks;
+    }
+
+    /**
+     * Performs the on initialize client operation.
+     */
     @Override
     public void onInitializeClient() {
         WinterStartAnimation.register();
@@ -36,7 +58,7 @@ public class WinterWeatherClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(WinterStartPayload.TYPE, (payload, context) ->
                 context.client().execute(() -> {
                     WinterStartAnimation.trigger(
-                            payload.bannerTitle(), payload.bannerSubtitle(), payload.bannerExtraLines());
+                            WinterStartAnnouncementConfig.decode(payload.announcementJson()));
                 }));
         ClientPlayNetworking.registerGlobalReceiver(CampfireSmokePayload.TYPE, (payload, context) ->
                 context.client().execute(() -> CampfireSmokeState.set(
@@ -79,12 +101,5 @@ public class WinterWeatherClient implements ClientModInitializer {
                 ClientPlayNetworking.send(new HeatStatePayload(true, progress));
             }
         });
-    }
-
-    private static int powderSnowBlocks(net.minecraft.client.Minecraft client) {
-        int blocks = 0;
-        if (client.level.getBlockState(client.player.blockPosition()).is(Blocks.POWDER_SNOW)) blocks++;
-        if (client.level.getBlockState(client.player.blockPosition().above()).is(Blocks.POWDER_SNOW)) blocks++;
-        return blocks;
     }
 }
