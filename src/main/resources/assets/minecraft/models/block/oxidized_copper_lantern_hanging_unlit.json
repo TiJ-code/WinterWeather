@@ -1,0 +1,7 @@
+{
+  "format_version": "1.21.11",
+  "parent": "minecraft:block/template_hanging_lantern",
+  "textures": {
+    "lantern": "minecraft:block/oxidized_copper_lantern_unlit"
+  }
+}

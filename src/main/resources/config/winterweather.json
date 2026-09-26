@@ -91,11 +91,19 @@
           ]
         },
         {
-          "value": 1.0,
+          "value": 1.5,
           "radius": 5.0,
-          "burnout_seconds": 0,
+          "burnout_seconds": 3600,
           "variants": [
-            "minecraft:lantern"
+            "minecraft:lantern",
+            "minecraft:copper_lantern",
+            "minecraft:exposed_copper_lantern",
+            "minecraft:weathered_copper_lantern",
+            "minecraft:oxidized_copper_lantern",
+            "minecraft:waxed_copper_lantern",
+            "minecraft:waxed_exposed_copper_lantern",
+            "minecraft:waxed_weathered_copper_lantern",
+            "minecraft:waxed_oxidized_copper_lantern"
           ]
         }
       ]

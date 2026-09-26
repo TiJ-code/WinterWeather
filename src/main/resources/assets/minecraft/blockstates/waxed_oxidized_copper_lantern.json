@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "hanging=false,lit=false": {
+      "model": "minecraft:block/oxidized_copper_lantern_unlit"
+    },
+    "hanging=false,lit=true": {
+      "model": "minecraft:block/oxidized_copper_lantern"
+    },
+    "hanging=true,lit=false": {
+      "model": "minecraft:block/oxidized_copper_lantern_hanging_unlit"
+    },
+    "hanging=true,lit=true": {
+      "model": "minecraft:block/oxidized_copper_lantern_hanging"
+    }
+  }
+}
