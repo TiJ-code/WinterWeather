@@ -20,9 +20,9 @@ public abstract class LevelMixin {
             BlockPos pos, BlockState state, int flags, CallbackInfoReturnable<Boolean> callbackInfo
     ) {
         if (callbackInfo.getReturnValueZ() && (Object) this instanceof ServerLevel level) {
-            var manager = WinterWeather.torchManagerOrNull();
+            var manager = WinterWeather.heatSourceManagerOrNull();
             if (manager != null && manager.isExtinguishable(state)) {
-                manager.registerPlacedTorch(level, pos, level.getBlockState(pos));
+                manager.registerPlacedHeatSource(level, pos, level.getBlockState(pos));
             }
         }
     }

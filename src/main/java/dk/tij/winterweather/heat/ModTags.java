@@ -1,4 +1,4 @@
-package dk.tij.winterweather.torch;
+package dk.tij.winterweather.heat;
 
 import net.minecraft.resources.Identifier;
 import net.minecraft.core.registries.Registries;

@@ -16,23 +16,23 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Block.class)
 public abstract class BlockLifecycleMixin {
     @Inject(method = "setPlacedBy", at = @At("TAIL"))
-    private void winterweather$trackPlacedTorch(
+    private void winterweather$trackPlacedHeatSource(
             Level level, BlockPos pos, BlockState state, LivingEntity placer,
             ItemStack stack, CallbackInfo callbackInfo
     ) {
         if (level instanceof net.minecraft.server.level.ServerLevel serverLevel
-                && WinterWeather.torchManager().isExtinguishable(state)) {
-            WinterWeather.torchManager().registerPlacedTorch(serverLevel, pos, state);
+                && WinterWeather.heatSourceManager().isExtinguishable(state)) {
+            WinterWeather.heatSourceManager().registerPlacedHeatSource(serverLevel, pos, state);
         }
     }
 
     @Inject(method = "destroy", at = @At("TAIL"))
-    private void winterweather$removeBrokenTorch(
+    private void winterweather$removeBrokenHeatSource(
             LevelAccessor level, BlockPos pos, BlockState state, CallbackInfo callbackInfo
     ) {
         if (level instanceof net.minecraft.server.level.ServerLevel serverLevel
-                && WinterWeather.torchManager().isExtinguishable(state)) {
-            WinterWeather.torchManager().removeTorch(serverLevel, pos);
+                && WinterWeather.heatSourceManager().isExtinguishable(state)) {
+            WinterWeather.heatSourceManager().removeHeatSource(serverLevel, pos);
         }
     }
 }

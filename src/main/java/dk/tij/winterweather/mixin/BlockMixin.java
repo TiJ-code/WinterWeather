@@ -1,8 +1,8 @@
 package dk.tij.winterweather.mixin;
 
 import dk.tij.winterweather.WinterWeather;
-import dk.tij.winterweather.torch.TorchBlocks;
-import dk.tij.winterweather.torch.TorchManager;
+import dk.tij.winterweather.heat.HeatSourceBlocks;
+import dk.tij.winterweather.heat.HeatSourceManager;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.TorchBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -20,7 +20,7 @@ public abstract class BlockMixin {
             org.spongepowered.asm.mixin.injection.callback.CallbackInfo callbackInfo
     ) {
         if ((Object) this instanceof TorchBlock) {
-            builder.add(TorchBlocks.LIT);
+            builder.add(HeatSourceBlocks.LIT);
         }
     }
 
@@ -29,9 +29,9 @@ public abstract class BlockMixin {
             CallbackInfoReturnable<BlockState> callbackInfo
     ) {
         BlockState state = callbackInfo.getReturnValue();
-        var manager = WinterWeather.torchManagerOrNull();
+        var manager = WinterWeather.heatSourceManagerOrNull();
         if (manager != null && manager.isExtinguishable(state) && WinterWeather.useUnlitState()) {
-            callbackInfo.setReturnValue(TorchManager.withLit(state, false));
+            callbackInfo.setReturnValue(HeatSourceManager.withLit(state, false));
         }
     }
 }
