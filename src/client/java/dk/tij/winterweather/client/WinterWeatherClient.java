@@ -5,6 +5,7 @@ import dk.tij.winterweather.network.ConfigPayload;
 import dk.tij.winterweather.network.CampfireSmokePayload;
 import dk.tij.winterweather.network.DebugStatePayload;
 import dk.tij.winterweather.network.HeatStatePayload;
+import dk.tij.winterweather.network.WinterStartPayload;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -21,6 +22,7 @@ public class WinterWeatherClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        WinterStartAnimation.register();
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> CampfireSmokeState.clear());
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> CampfireSmokeState.clear());
         ClientPlayNetworking.registerGlobalReceiver(HeatStatePayload.TYPE, (payload, context) ->
@@ -31,6 +33,11 @@ public class WinterWeatherClient implements ClientModInitializer {
                 context.client().execute(() -> config = payload.toConfig()));
         ClientPlayNetworking.registerGlobalReceiver(DebugStatePayload.TYPE, (payload, context) ->
                 context.client().execute(() -> HeatStatePayloadState.updateDebug(payload.enabled())));
+        ClientPlayNetworking.registerGlobalReceiver(WinterStartPayload.TYPE, (payload, context) ->
+                context.client().execute(() -> {
+                    WinterStartAnimation.trigger(
+                            payload.bannerTitle(), payload.bannerSubtitle(), payload.bannerExtraLines());
+                }));
         ClientPlayNetworking.registerGlobalReceiver(CampfireSmokePayload.TYPE, (payload, context) ->
                 context.client().execute(() -> CampfireSmokeState.set(
                         payload.dimension(), payload.pos(), payload.suppressed())));

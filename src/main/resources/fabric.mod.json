@@ -4,8 +4,10 @@
   "version": "${version}",
   "name": "WinterWeather",
   "description": "",
-  "authors": [],
-  "contact": {},
+  "authors": ["TiJ-code"],
+  "contact": {
+    "sources": "https://github.com/TiJ-code/WinterWeather"
+  },
   "license": "All-Rights-Reserved",
   "icon": "assets/winterweather/icon.png",
   "environment": "*",

@@ -1,6 +1,7 @@
 package dk.tij.winterweather.network;
 
 import dk.tij.winterweather.config.FreezingConfig;
+import dk.tij.winterweather.config.WinterStartAnnouncementConfig;
 import dk.tij.winterweather.state.FreezeStateManager;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -27,6 +28,7 @@ public final class FreezeNetworking {
         PayloadTypeRegistry.clientboundPlay().register(ConfigPayload.TYPE, ConfigPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(CampfireSmokePayload.TYPE, CampfireSmokePayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(DebugStatePayload.TYPE, DebugStatePayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(WinterStartPayload.TYPE, WinterStartPayload.CODEC);
 
         ServerPlayNetworking.registerGlobalReceiver(HeatStatePayload.TYPE, (payload, context) ->
                 context.server().execute(() -> {
@@ -90,6 +92,37 @@ public final class FreezeNetworking {
 
     public static void sendDebugState(ServerPlayer player, boolean enabled) {
         ServerPlayNetworking.send(player, new DebugStatePayload(enabled));
+    }
+
+    public static void broadcastWinterStart(net.minecraft.server.MinecraftServer server) {
+        WinterStartAnnouncementConfig announcement = WinterStartAnnouncementConfig.load();
+        var message = net.minecraft.network.chat.Component.literal(announcement.chatMessage())
+                .withStyle(style -> style.withColor(net.minecraft.ChatFormatting.AQUA).withBold(true));
+        server.getPlayerList().broadcastSystemMessage(message, false);
+        for (String line : announcement.chatExtraLines()) {
+            server.getPlayerList().broadcastSystemMessage(
+                    net.minecraft.network.chat.Component.literal(line)
+                            .withStyle(net.minecraft.ChatFormatting.GRAY), false);
+        }
+        var authorLine = net.minecraft.network.chat.Component.literal("Created by ")
+                .withStyle(net.minecraft.ChatFormatting.DARK_GRAY)
+                .append(net.minecraft.network.chat.Component.literal("TiJ-code")
+                        .withStyle(style -> style
+                                .withColor(net.minecraft.ChatFormatting.AQUA)
+                                .withUnderlined(true)
+                                .withClickEvent(new net.minecraft.network.chat.ClickEvent.OpenUrl(
+                                        java.net.URI.create("https://github.com/TiJ-code/WinterWeather")))
+                                .withHoverEvent(new net.minecraft.network.chat.HoverEvent.ShowText(
+                                        net.minecraft.network.chat.Component.literal("Open the WinterWeather repository")))));
+        server.getPlayerList().broadcastSystemMessage(authorLine, false);
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            ServerPlayNetworking.send(player, new WinterStartPayload(
+                    announcement.chatMessage(),
+                    announcement.chatExtraLines(),
+                    announcement.bannerTitle(),
+                    announcement.bannerSubtitle(),
+                    announcement.bannerExtraLines()));
+        }
     }
 
     public interface FreezingConfigProvider {
