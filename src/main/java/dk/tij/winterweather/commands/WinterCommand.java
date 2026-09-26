@@ -34,7 +34,7 @@ public final class WinterCommand {
                                 && permissions.level().isEqualOrHigherThan(PermissionLevel.GAMEMASTERS))
                         .then(literal("start").executes(context -> {
                             mod.setEnabled(true);
-                            context.getSource().sendSuccess(() -> Component.literal("Winter has started."), true);
+                            FreezeNetworking.broadcastWinterStart(context.getSource().getServer());
                             return 1;
                         }))
                         .then(literal("stop").executes(context -> {
