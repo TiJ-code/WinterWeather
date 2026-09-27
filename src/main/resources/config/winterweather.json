@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "enabled": true,
+  "enabled": false,
   "frost": {
     "critical_freezing_ticks": 500,
     "player_radius": 5.0,
