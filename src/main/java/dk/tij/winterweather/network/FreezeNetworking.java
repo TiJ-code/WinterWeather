@@ -42,12 +42,22 @@ public final class FreezeNetworking {
         PayloadTypeRegistry.clientboundPlay().register(ConfigPayload.TYPE, ConfigPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(CampfireSmokePayload.TYPE, CampfireSmokePayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(DebugStatePayload.TYPE, DebugStatePayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(AdminConfigOpenPayload.TYPE, AdminConfigOpenPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(WinterStartPayload.TYPE, WinterStartPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(HeatStatePayload.TYPE, (payload, context) ->
                 context.server().execute(() -> {
                     if (config.current().enabled()) {
                         state.accept(context.player().getUUID(), payload.actualFreezeTicks());
                     }
+                }));
+        ServerPlayNetworking.registerGlobalReceiver(ConfigPayload.TYPE, (payload, context) ->
+                context.server().execute(() -> {
+                    var player = context.player();
+                    if (!(player.permissions() instanceof net.minecraft.server.permissions.LevelBasedPermissionSet permissions)
+                            || !permissions.level().isEqualOrHigherThan(net.minecraft.server.permissions.PermissionLevel.GAMEMASTERS)) {
+                        return;
+                    }
+                    dk.tij.winterweather.WinterWeather.instance().applyConfig(payload, context.server());
                 }));
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayer player = handler.getPlayer();
@@ -139,6 +149,11 @@ public final class FreezeNetworking {
      */
     public static void sendDebugState(ServerPlayer player, boolean enabled) {
         ServerPlayNetworking.send(player, new DebugStatePayload(enabled));
+    }
+
+    public static void sendAdminConfig(ServerPlayer player, ConfigPayload payload) {
+        ServerPlayNetworking.send(player, payload);
+        ServerPlayNetworking.send(player, new AdminConfigOpenPayload(true));
     }
 
     /**

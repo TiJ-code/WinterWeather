@@ -70,7 +70,8 @@ public record FreezingConfig(
         boolean useUnlitState,
         boolean heatSourceRelightingEnabled,
         int heatSourceRelightDurabilityCost,
-        double glowstoneDurationMultiplier
+        double glowstoneDurationMultiplier,
+        List<HeatSourceConfig> heatSourceGroups
 ) {
     public static final int MAX_FROZEN_TICKS = 140;
     /**
@@ -119,18 +120,18 @@ public record FreezingConfig(
                                 true,
                                 new HeatSourcesConfig.RelightConfig(true, 1),
                                 List.of(
-                                        heatSource(1.0, 3.0, 300,
+                                        heatSource("Torch", 1.0, 3.0, 300,
                                                 "minecraft:torch", "minecraft:wall_torch"),
-                                        heatSource(2.0, 3.0, 3000,
+                                        heatSource("Soul Torch", 2.0, 3.0, 3000,
                                                 "minecraft:soul_torch", "minecraft:soul_wall_torch"),
-                                        heatSource(1.5, 3.5, 600,
+                                        heatSource("Copper Torch", 1.5, 3.5, 600,
                                                 "minecraft:copper_torch", "minecraft:copper_wall_torch"),
-                                        heatSource(2.0, 5.0, 300, "minecraft:campfire"),
-                                        heatSource(2.0, 6.0, 3000, "minecraft:soul_campfire"),
-                                        heatSource(3.0, 5.0, 0, "minecraft:fire"),
-                                        heatSource(3.0, 7.0, 0, "minecraft:soul_fire"),
-                                        heatSource(6.0, 3.0, 0, "minecraft:lava"),
-                                        heatSource(1.0, 5.0, 0,
+                                        heatSource("Campfire", 2.0, 5.0, 300, "minecraft:campfire"),
+                                        heatSource("Soul Campfire", 2.0, 6.0, 3000, "minecraft:soul_campfire"),
+                                        heatSource("Fire", 3.0, 5.0, 0, "minecraft:fire"),
+                                        heatSource("Soul Fire", 3.0, 7.0, 0, "minecraft:soul_fire"),
+                                        heatSource("Lava", 6.0, 3.0, 0, "minecraft:lava"),
+                                        heatSource("Lanterns", 1.0, 5.0, 0,
                                                 "minecraft:lantern",
                                                 "minecraft:copper_lantern",
                                                 "minecraft:exposed_copper_lantern",
@@ -156,12 +157,14 @@ public record FreezingConfig(
      * @param blockIds       the block ids value
      */
     private static HeatSourceConfig heatSource(
+            String name,
             double value,
             double radius,
             int burnoutSeconds,
             String... blockIds
     ) {
         return new HeatSourceConfig(
+                name,
                 value,
                 radius,
                 burnoutSeconds,
@@ -242,7 +245,8 @@ public record FreezingConfig(
                 heatSources.useUnlitState(),
                 heatSources.relight().flintAndSteel(),
                 Math.max(0, heatSources.relight().durabilityCost()),
-                heatSources.glowstoneDurationMultiplier()
+                heatSources.glowstoneDurationMultiplier(),
+                heatSources.blocks()
         );
     }
 
