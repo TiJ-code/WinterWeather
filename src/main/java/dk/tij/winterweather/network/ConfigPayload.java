@@ -2,6 +2,7 @@ package dk.tij.winterweather.network;
 
 import dk.tij.winterweather.config.FreezingConfig;
 import dk.tij.winterweather.server.config.BlockConfig;
+import dk.tij.winterweather.server.config.HeatSourceConfig;
 import dk.tij.winterweather.utils.InterpolationFunctions;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.registries.Registries;
@@ -14,6 +15,7 @@ import net.minecraft.world.level.block.Block;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 /**
  * Network payload for transferring config data.
@@ -48,8 +50,30 @@ public record ConfigPayload(
         boolean useUnlitState,
         boolean heatSourceRelightingEnabled,
         int heatSourceRelightDurabilityCost,
-        double glowstoneDurationMultiplier
+        double glowstoneDurationMultiplier,
+        List<HeatSourceGroupPayload> heatSourceGroups
 ) implements CustomPacketPayload {
+    public boolean valid() {
+        if (criticalFreezingTicks < 1 || criticalFreezingTicks > 1_000_000
+                || !Double.isFinite(playerRadius) || playerRadius < 0 || playerRadius > 128
+                || !Double.isFinite(maxPossibleIsolation) || maxPossibleIsolation < 0 || maxPossibleIsolation > 1
+                || !Double.isFinite(playerBurningBoost) || playerBurningBoost < 1 || playerBurningBoost > 1001
+                || !Double.isFinite(playerPowderSnowBoost) || playerPowderSnowBoost < 1 || playerPowderSnowBoost > 1001
+                || heatSourceRelightDurabilityCost < 0 || heatSourceRelightDurabilityCost > 1000
+                || !Double.isFinite(glowstoneDurationMultiplier) || glowstoneDurationMultiplier < 1 || glowstoneDurationMultiplier > 1000
+                || blocks.size() > 256 || armorIsolation.size() > 256
+                || heatSourceGroups.size() > 256
+                || java.util.Arrays.stream(InterpolationFunctions.values()).noneMatch(value -> value.getName().equals(interpolation))) return false;
+        return blocks.values().stream().allMatch(block -> Double.isFinite(block.heat()) && block.heat() >= 0
+                && Double.isFinite(block.radius()) && block.radius() >= 0 && block.radius() <= 128
+                && block.burnoutSeconds() >= 0 && block.burnoutSeconds() <= 1_000_000)
+                && armorIsolation.values().stream().allMatch(value -> Double.isFinite(value) && value >= 0 && value <= 1)
+                && heatSourceGroups.stream().allMatch(group -> group.name() != null && !group.name().isBlank()
+                && group.name().length() <= 80 && Double.isFinite(group.heat()) && group.heat() >= 0
+                && Double.isFinite(group.radius()) && group.radius() >= 0 && group.radius() <= 128
+                && group.burnoutSeconds() >= 0 && group.burnoutSeconds() <= 1_000_000
+                && group.variants().size() <= 256 && group.variants().stream().allMatch(id -> id != null && id.length() <= 256));
+    }
     public static final Type<ConfigPayload> TYPE =
             new Type<>(Identifier.parse("winterweather:config"));
     private static final StreamCodec<RegistryFriendlyByteBuf, Boolean> BOOL_CODEC =
@@ -119,6 +143,8 @@ public record ConfigPayload(
                         BOOL_CODEC.encode(buffer, payload.heatSourceRelightingEnabled());
                         INT_CODEC.encode(buffer, payload.heatSourceRelightDurabilityCost());
                         DOUBLE_CODEC.encode(buffer, payload.glowstoneDurationMultiplier());
+                        ByteBufCodecs.collection(java.util.ArrayList::new, HeatSourceGroupPayload.CODEC, 256)
+                                .encode(buffer, new java.util.ArrayList<>(payload.heatSourceGroups()));
                     },
                     buffer -> new ConfigPayload(
                             BOOL_CODEC.decode(buffer),
@@ -134,7 +160,8 @@ public record ConfigPayload(
                             BOOL_CODEC.decode(buffer),
                             BOOL_CODEC.decode(buffer),
                             INT_CODEC.decode(buffer),
-                            DOUBLE_CODEC.decode(buffer)
+                            DOUBLE_CODEC.decode(buffer),
+                            ByteBufCodecs.collection(java.util.ArrayList::new, HeatSourceGroupPayload.CODEC, 256).decode(buffer)
                     )
             );
 
@@ -158,7 +185,9 @@ public record ConfigPayload(
                 config.useUnlitState(),
                 config.heatSourceRelightingEnabled(),
                 config.heatSourceRelightDurabilityCost(),
-                config.glowstoneDurationMultiplier()
+                config.glowstoneDurationMultiplier(),
+                config.heatSourceGroups().stream().map(group -> new HeatSourceGroupPayload(group.name(), group.value(),
+                        group.radius(), group.burnoutSeconds(), group.variants().stream().map(v -> v.blockId()).toList())).toList()
         );
     }
 
@@ -180,7 +209,9 @@ public record ConfigPayload(
                 useUnlitState,
                 heatSourceRelightingEnabled,
                 heatSourceRelightDurabilityCost,
-                glowstoneDurationMultiplier
+                glowstoneDurationMultiplier,
+                heatSourceGroups.stream().map(group -> new HeatSourceConfig(group.name(), group.heat(), group.radius(),
+                        group.burnoutSeconds(), group.variants().stream().map(dk.tij.winterweather.server.config.HeatSourceVariant::new).toList())).toList()
         );
     }
 

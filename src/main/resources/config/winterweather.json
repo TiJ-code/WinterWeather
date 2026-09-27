@@ -26,6 +26,7 @@
       },
       "blocks": [
         {
+          "name": "Torches",
           "value": 1.0,
           "radius": 3.0,
           "burnout_seconds": 300,
@@ -35,6 +36,7 @@
           ]
         },
         {
+          "name": "Soul Torches",
           "value": 2.0,
           "radius": 3.0,
           "burnout_seconds": 3000,
@@ -44,6 +46,7 @@
           ]
         },
         {
+          "name": "Copper Torches",
           "value": 1.5,
           "radius": 3.5,
           "burnout_seconds": 600,
@@ -53,6 +56,7 @@
           ]
         },
         {
+          "name": "Campfire",
           "value": 2.0,
           "radius": 5.0,
           "burnout_seconds": 300,
@@ -61,6 +65,7 @@
           ]
         },
         {
+          "name": "Soul Campfire",
           "value": 2.0,
           "radius": 6.0,
           "burnout_seconds": 3000,
@@ -69,6 +74,7 @@
           ]
         },
         {
+          "name": "Fire",
           "value": 3.0,
           "radius": 5.0,
           "burnout_seconds": 0,
@@ -77,6 +83,7 @@
           ]
         },
         {
+          "name": "Soul Fire",
           "value": 3.0,
           "radius": 7.0,
           "burnout_seconds": 0,
@@ -85,6 +92,7 @@
           ]
         },
         {
+          "name": "Lava",
           "value": 6.0,
           "radius": 3.0,
           "burnout_seconds": 0,
@@ -93,6 +101,7 @@
           ]
         },
         {
+          "name": "Lanterns",
           "value": 1.5,
           "radius": 5.0,
           "burnout_seconds": 3600,

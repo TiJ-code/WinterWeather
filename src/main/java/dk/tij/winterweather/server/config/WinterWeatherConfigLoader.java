@@ -228,12 +228,27 @@ public final class WinterWeatherConfigLoader {
         }
         List<HeatSourceVariant> variants =
                 parseVariants(variantsElement);
+        String name = json.has("name")
+                ? getRequiredString(json, "name")
+                : defaultHeatSourceName(variants);
         return new HeatSourceConfig(
+                name,
                 value,
                 radius,
                 burnoutSeconds,
                 variants
         );
+    }
+
+    private static String defaultHeatSourceName(List<HeatSourceVariant> variants) {
+        if (variants.isEmpty()) return "Heat Source";
+        String id = variants.getFirst().blockId();
+        int separator = id.indexOf(':');
+        String path = separator >= 0 ? id.substring(separator + 1) : id;
+        return java.util.Arrays.stream(path.split("[_-]+"))
+                .filter(part -> !part.isBlank())
+                .map(part -> Character.toUpperCase(part.charAt(0)) + part.substring(1))
+                .collect(java.util.stream.Collectors.joining(" "));
     }
 
     /**
@@ -331,7 +346,7 @@ public final class WinterWeatherConfigLoader {
      * @param config the config value
      */
     private static JsonObject serializeFrost(
-            FrostConfig config
+        FrostConfig config
     ) {
         JsonObject json = new JsonObject();
         json.addProperty(
@@ -447,6 +462,7 @@ public final class WinterWeatherConfigLoader {
             HeatSourceConfig config
     ) {
         JsonObject json = new JsonObject();
+        json.addProperty("name", config.name());
         json.addProperty(
                 "value",
                 config.value()

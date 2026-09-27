@@ -1,5 +1,6 @@
 package dk.tij.winterweather.client;
 
+import dk.tij.winterweather.client.admin.AdminConfigScreen;
 import dk.tij.winterweather.config.FreezingConfig;
 import dk.tij.winterweather.config.WinterStartAnnouncementConfig;
 import dk.tij.winterweather.network.CampfireSmokePayload;
@@ -7,6 +8,7 @@ import dk.tij.winterweather.network.ConfigPayload;
 import dk.tij.winterweather.network.DebugStatePayload;
 import dk.tij.winterweather.network.HeatStatePayload;
 import dk.tij.winterweather.network.WinterStartPayload;
+import dk.tij.winterweather.network.AdminConfigOpenPayload;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -53,6 +55,10 @@ public class WinterWeatherClient implements ClientModInitializer {
 
         ClientPlayNetworking.registerGlobalReceiver(ConfigPayload.TYPE, (payload, context) ->
                 context.client().execute(() -> config = payload.toConfig()));
+        ClientPlayNetworking.registerGlobalReceiver(AdminConfigOpenPayload.TYPE, (payload, context) ->
+                context.client().execute(() -> {
+                    if (payload.open() && config != null) context.client().setScreen(new AdminConfigScreen(ConfigPayload.from(config)));
+                }));
         ClientPlayNetworking.registerGlobalReceiver(DebugStatePayload.TYPE, (payload, context) ->
                 context.client().execute(() -> HeatStatePayloadState.updateDebug(payload.enabled())));
         ClientPlayNetworking.registerGlobalReceiver(WinterStartPayload.TYPE, (payload, context) ->

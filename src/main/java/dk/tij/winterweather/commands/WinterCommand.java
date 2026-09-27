@@ -98,6 +98,11 @@ public final class WinterCommand {
                                     return 1;
                                 })))
                         .then(literal("config")
+                                .then(literal("ui").executes(context -> {
+                                    ServerPlayer player = context.getSource().getPlayerOrException();
+                                    FreezeNetworking.sendAdminConfig(player, dk.tij.winterweather.network.ConfigPayload.from(mod.config()));
+                                    return 1;
+                                }))
                                 .then(literal("reload").executes(context -> {
                                     mod.reload();
                                     mod.syncClients(context.getSource().getServer());

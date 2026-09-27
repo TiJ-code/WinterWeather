@@ -46,6 +46,36 @@ public class WinterWeather implements ModInitializer {
      */
     private HeatSourceManager heatSourceManager;
 
+    public static WinterWeather instance() { return INSTANCE; }
+
+    public FreezingConfig config() { return config; }
+
+    public void applyConfig(dk.tij.winterweather.network.ConfigPayload payload, MinecraftServer server) {
+        if (!payload.valid()) return;
+        var armor = new java.util.LinkedHashMap<String, Double>();
+        payload.armorIsolation().forEach((id, value) -> armor.put(id.toString(), value * 100));
+        var sources = payload.heatSourceGroups().stream().map(group -> new dk.tij.winterweather.server.config.HeatSourceConfig(
+                group.name(), group.heat(), group.radius(), group.burnoutSeconds(),
+                group.variants().stream().map(dk.tij.winterweather.server.config.HeatSourceVariant::new).toList())).toList();
+        var document = new dk.tij.winterweather.server.config.WinterWeatherConfig(payload.enabled(),
+                new dk.tij.winterweather.server.config.FrostConfig(payload.criticalFreezingTicks(), payload.playerRadius(),
+                        payload.interpolation(), (payload.playerBurningBoost() - 1) * 100,
+                        (payload.playerPowderSnowBoost() - 1) * 100,
+                        new dk.tij.winterweather.server.config.IsolationConfig(payload.maxPossibleIsolation() * 100, armor),
+                        new dk.tij.winterweather.server.config.HeatSourcesConfig(payload.heatSourcesEnabled(), payload.useUnlitState(),
+                                new dk.tij.winterweather.server.config.HeatSourcesConfig.RelightConfig(
+                                        payload.heatSourceRelightingEnabled(), payload.heatSourceRelightDurabilityCost()),
+                                sources, payload.glowstoneDurationMultiplier())));
+        try {
+            dk.tij.winterweather.server.config.WinterWeatherConfigLoader.save(
+                    net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir().resolve("winterweather.json"), document);
+            reload();
+            syncClients(server);
+        } catch (RuntimeException exception) {
+            org.slf4j.LoggerFactory.getLogger("WinterWeather").error("Could not save admin configuration", exception);
+        }
+    }
+
     /**
      * Performs the mod enabled operation.
      */
