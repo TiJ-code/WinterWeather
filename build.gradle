@@ -128,10 +128,6 @@ tasks.register("proguard", ProGuardTask) {
     )
 }
 
-tasks.named("build") {
-    dependsOn tasks.named("proguard")
-}
-
 publishing {
     publications {
         create("mavenJava", MavenPublication) {
