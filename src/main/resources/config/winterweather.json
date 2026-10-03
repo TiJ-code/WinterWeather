@@ -26,6 +26,17 @@
       },
       "blocks": [
         {
+          "name": "Furnaces",
+          "value": 5.0,
+          "radius": 3.0,
+          "burnout_seconds": 0,
+          "variants": [
+            "minecraft:furnace",
+            "minecraft:smoker",
+            "minecraft:blast_furnace"
+          ]
+        },
+        {
           "name": "Torches",
           "value": 1.0,
           "radius": 3.0,
