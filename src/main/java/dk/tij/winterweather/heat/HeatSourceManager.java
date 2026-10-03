@@ -6,8 +6,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.level.block.BlastFurnaceBlock;
 import net.minecraft.world.level.block.CampfireBlock;
+import net.minecraft.world.level.block.FurnaceBlock;
 import net.minecraft.world.level.block.LanternBlock;
+import net.minecraft.world.level.block.SmokerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.function.Supplier;
@@ -39,6 +42,9 @@ public final class HeatSourceManager {
     public static boolean isLit(BlockState state) {
         if (state.hasProperty(HeatSourceBlocks.LIT)) {
             return state.getValue(HeatSourceBlocks.LIT);
+        }
+        if (state.hasProperty(FurnaceBlock.LIT)) {
+            return state.getValue(FurnaceBlock.LIT);
         }
         return !state.hasProperty(CampfireBlock.LIT)
                 || state.getValue(CampfireBlock.LIT);

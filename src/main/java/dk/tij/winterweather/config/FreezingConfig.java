@@ -120,6 +120,11 @@ public record FreezingConfig(
                                 true,
                                 new HeatSourcesConfig.RelightConfig(true, 1),
                                 List.of(
+                                        heatSource("Furnaces", 5.0, 3.0, 0,
+                                                "minecraft:furnace",
+                                                "minecraft:smoker",
+                                                "minecraft:blast_furnace"
+                                        ),
                                         heatSource("Torch", 1.0, 3.0, 300,
                                                 "minecraft:torch", "minecraft:wall_torch"),
                                         heatSource("Soul Torch", 2.0, 3.0, 3000,
