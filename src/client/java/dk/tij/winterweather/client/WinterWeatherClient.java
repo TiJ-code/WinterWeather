@@ -13,9 +13,11 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.impl.menu.client.ClientNetworking;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 
 import java.util.ArrayList;
@@ -78,20 +80,26 @@ public class WinterWeatherClient implements ClientModInitializer {
             if (config == null || !HeatStatePayloadState.initialized()
                     || !HeatStatePayloadState.serverEnabled()) return;
 
-            double temperatureDelta = config.temperatureDelta(
-                    client.level,
-                    client.player.blockPosition(),
-                    client.player.position(),
-                    client.player.getEyePosition(),
-                    new ArrayList<>(java.util.List.of(
-                            BuiltInRegistries.ITEM.getKey(client.player.getItemBySlot(EquipmentSlot.HEAD).getItem()),
-                            BuiltInRegistries.ITEM.getKey(client.player.getItemBySlot(EquipmentSlot.CHEST).getItem()),
-                            BuiltInRegistries.ITEM.getKey(client.player.getItemBySlot(EquipmentSlot.LEGS).getItem()),
-                            BuiltInRegistries.ITEM.getKey(client.player.getItemBySlot(EquipmentSlot.FEET).getItem())
-                    )),
-                    client.player.isOnFire(),
-                    powderSnowBlocks(client)
-            );
+            double temperatureDelta;
+            if (client.level.dimension() == Level.NETHER) {
+                temperatureDelta = -50.0f;
+            } else {
+                temperatureDelta = config.temperatureDelta(
+                        client.level,
+                        client.player.blockPosition(),
+                        client.player.position(),
+                        client.player.getEyePosition(),
+                        new ArrayList<>(java.util.List.of(
+                                BuiltInRegistries.ITEM.getKey(client.player.getItemBySlot(EquipmentSlot.HEAD).getItem()),
+                                BuiltInRegistries.ITEM.getKey(client.player.getItemBySlot(EquipmentSlot.CHEST).getItem()),
+                                BuiltInRegistries.ITEM.getKey(client.player.getItemBySlot(EquipmentSlot.LEGS).getItem()),
+                                BuiltInRegistries.ITEM.getKey(client.player.getItemBySlot(EquipmentSlot.FEET).getItem())
+                        )),
+                        client.player.isOnFire(),
+                        powderSnowBlocks(client)
+                );
+            }
+
             double progress = Math.max(0,
                     HeatStatePayloadState.actualFreezeTicks() + temperatureDelta);
             HeatStatePayloadState.update(progress);
