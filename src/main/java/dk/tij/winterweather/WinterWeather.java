@@ -55,7 +55,7 @@ public class WinterWeather implements ModInitializer {
         var armor = new java.util.LinkedHashMap<String, Double>();
         payload.armorIsolation().forEach((id, value) -> armor.put(id.toString(), value * 100));
         var sources = payload.heatSourceGroups().stream().map(group -> new dk.tij.winterweather.server.config.HeatSourceConfig(
-                group.name(), group.heat(), group.radius(), group.burnoutSeconds(),
+                group.name(), group.heat(), group.radius(), group.burnoutSeconds(), group.interactable(),
                 group.variants().stream().map(dk.tij.winterweather.server.config.HeatSourceVariant::new).toList())).toList();
         var document = new dk.tij.winterweather.server.config.WinterWeatherConfig(payload.enabled(),
                 new dk.tij.winterweather.server.config.FrostConfig(payload.criticalFreezingTicks(), payload.playerRadius(),

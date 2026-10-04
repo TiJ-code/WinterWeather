@@ -8,6 +8,7 @@ import java.util.List;
 
 /** Named server-config group and the variants sharing its heat settings. */
 public record HeatSourceGroupPayload(String name, double heat, double radius, int burnoutSeconds,
+                                     boolean interactable,
                                      List<String> variants) {
     private static final StreamCodec<RegistryFriendlyByteBuf, String> STRING_CODEC =
             StreamCodec.of(RegistryFriendlyByteBuf::writeUtf, RegistryFriendlyByteBuf::readUtf);
@@ -18,6 +19,7 @@ public record HeatSourceGroupPayload(String name, double heat, double radius, in
             ByteBufCodecs.DOUBLE, HeatSourceGroupPayload::heat,
             ByteBufCodecs.DOUBLE, HeatSourceGroupPayload::radius,
             ByteBufCodecs.VAR_INT, HeatSourceGroupPayload::burnoutSeconds,
+            ByteBufCodecs.BOOL, HeatSourceGroupPayload::interactable,
             STRINGS_CODEC, HeatSourceGroupPayload::variants,
             HeatSourceGroupPayload::new);
 }

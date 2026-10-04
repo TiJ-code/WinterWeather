@@ -10,6 +10,7 @@ import java.util.List;
  * @param value          heat contribution
  * @param radius         the radius value
  * @param burnoutSeconds the burnout seconds value
+ * @param interactable   if the blocks heat state can be interacted with
  * @param variants       the variants value
  */
 public record HeatSourceConfig(
@@ -17,6 +18,7 @@ public record HeatSourceConfig(
         double value,
         double radius,
         int burnoutSeconds,
+        boolean interactable,
         List<HeatSourceVariant> variants
 ) {
 }

@@ -381,6 +381,7 @@ public final class AdminConfigScreen extends Screen {
                                             groupIndex,
                                             value,
                                             null,
+                                            null,
                                             null
                                     )
                     )
@@ -401,6 +402,7 @@ public final class AdminConfigScreen extends Screen {
                                             groupIndex,
                                             null,
                                             value,
+                                            null,
                                             null
                                     )
                     )
@@ -423,7 +425,8 @@ public final class AdminConfigScreen extends Screen {
                                             groupIndex,
                                             null,
                                             null,
-                                            (int) value
+                                            (int) value,
+                                            null
                                     )
                     )
             );
@@ -689,7 +692,8 @@ public final class AdminConfigScreen extends Screen {
             int index,
             Double radius,
             Double heat,
-            Integer burnoutSeconds
+            Integer burnoutSeconds,
+            Boolean interactable
     ) {
         HeatSourceGroupPayload group =
                 draft.heatSourceGroups().get(index);
@@ -722,6 +726,8 @@ public final class AdminConfigScreen extends Screen {
                                 0,
                                 10000
                         ),
+
+                        interactable != null || group.interactable(),
 
                         group.variants()
                 )
