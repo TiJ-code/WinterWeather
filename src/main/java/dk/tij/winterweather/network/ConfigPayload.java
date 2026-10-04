@@ -110,6 +110,8 @@ public record ConfigPayload(
                     BlockConfig::extinguishable,
                     INT_CODEC,
                     BlockConfig::burnoutSeconds,
+                    BOOL_CODEC,
+                    BlockConfig::interactable,
                     BlockConfig::new
             );
     private static final StreamCodec<RegistryFriendlyByteBuf, Map<Block, BlockConfig>> BLOCKS_CODEC =
@@ -187,7 +189,8 @@ public record ConfigPayload(
                 config.heatSourceRelightDurabilityCost(),
                 config.glowstoneDurationMultiplier(),
                 config.heatSourceGroups().stream().map(group -> new HeatSourceGroupPayload(group.name(), group.value(),
-                        group.radius(), group.burnoutSeconds(), group.variants().stream().map(v -> v.blockId()).toList())).toList()
+                        group.radius(), group.burnoutSeconds(), group.interactable(),
+                        group.variants().stream().map(v -> v.blockId()).toList())).toList()
         );
     }
 
@@ -211,7 +214,7 @@ public record ConfigPayload(
                 heatSourceRelightDurabilityCost,
                 glowstoneDurationMultiplier,
                 heatSourceGroups.stream().map(group -> new HeatSourceConfig(group.name(), group.heat(), group.radius(),
-                        group.burnoutSeconds(), group.variants().stream().map(dk.tij.winterweather.server.config.HeatSourceVariant::new).toList())).toList()
+                        group.burnoutSeconds(), group.interactable(), group.variants().stream().map(dk.tij.winterweather.server.config.HeatSourceVariant::new).toList())).toList()
         );
     }
 

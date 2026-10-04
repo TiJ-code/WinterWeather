@@ -23,6 +23,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.FurnaceBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
@@ -120,23 +121,23 @@ public record FreezingConfig(
                                 true,
                                 new HeatSourcesConfig.RelightConfig(true, 1),
                                 List.of(
-                                        heatSource("Furnaces", 5.0, 3.0, 0,
+                                        heatSource("Furnaces", 5.0, 3.0, 0, false,
                                                 "minecraft:furnace",
                                                 "minecraft:smoker",
                                                 "minecraft:blast_furnace"
                                         ),
-                                        heatSource("Torch", 1.0, 3.0, 300,
+                                        heatSource("Torch", 1.0, 3.0, 300, true,
                                                 "minecraft:torch", "minecraft:wall_torch"),
-                                        heatSource("Soul Torch", 2.0, 3.0, 3000,
+                                        heatSource("Soul Torch", 2.0, 3.0, 3000, true,
                                                 "minecraft:soul_torch", "minecraft:soul_wall_torch"),
-                                        heatSource("Copper Torch", 1.5, 3.5, 600,
+                                        heatSource("Copper Torch", 1.5, 3.5, 600, true,
                                                 "minecraft:copper_torch", "minecraft:copper_wall_torch"),
-                                        heatSource("Campfire", 2.0, 5.0, 300, "minecraft:campfire"),
-                                        heatSource("Soul Campfire", 2.0, 6.0, 3000, "minecraft:soul_campfire"),
-                                        heatSource("Fire", 3.0, 5.0, 0, "minecraft:fire"),
-                                        heatSource("Soul Fire", 3.0, 7.0, 0, "minecraft:soul_fire"),
-                                        heatSource("Lava", 6.0, 3.0, 0, "minecraft:lava"),
-                                        heatSource("Lanterns", 1.0, 5.0, 0,
+                                        heatSource("Campfire", 2.0, 5.0, 300, true, "minecraft:campfire"),
+                                        heatSource("Soul Campfire", 2.0, 6.0, 3000, true, "minecraft:soul_campfire"),
+                                        heatSource("Fire", 3.0, 5.0, 0, true, "minecraft:fire"),
+                                        heatSource("Soul Fire", 3.0, 7.0, 0, true, "minecraft:soul_fire"),
+                                        heatSource("Lava", 6.0, 3.0, 0, true, "minecraft:lava"),
+                                        heatSource("Lanterns", 1.0, 5.0, 0, true,
                                                 "minecraft:lantern",
                                                 "minecraft:copper_lantern",
                                                 "minecraft:exposed_copper_lantern",
@@ -166,6 +167,7 @@ public record FreezingConfig(
             double value,
             double radius,
             int burnoutSeconds,
+            boolean interactable,
             String... blockIds
     ) {
         return new HeatSourceConfig(
@@ -173,6 +175,7 @@ public record FreezingConfig(
                 value,
                 radius,
                 burnoutSeconds,
+                interactable,
                 java.util.Arrays.stream(blockIds)
                         .map(HeatSourceVariant::new)
                         .toList()
@@ -224,7 +227,8 @@ public record FreezingConfig(
                                 source.value(),
                                 source.radius(),
                                 extinguishable,
-                                source.burnoutSeconds()
+                                source.burnoutSeconds(),
+                                source.interactable()
                         )
                 ));
             }
@@ -391,7 +395,8 @@ public record FreezingConfig(
         BlockConfig config = blocks.get(state.getBlock());
         return config != null && config.extinguishable()
                 && (state.hasProperty(HeatSourceBlocks.LIT)
-                || state.hasProperty(net.minecraft.world.level.block.CampfireBlock.LIT));
+                || state.hasProperty(net.minecraft.world.level.block.CampfireBlock.LIT)
+                || state.hasProperty(FurnaceBlock.LIT));
     }
 
     /**
@@ -402,6 +407,16 @@ public record FreezingConfig(
     public int extinguishableBurnoutSeconds(BlockState state) {
         BlockConfig config = blocks.get(state.getBlock());
         return config == null ? 0 : config.burnoutSeconds();
+    }
+
+    /**
+     * Reports whether players can turn off this heat source.
+     *
+     * @param state the block state
+     */
+    public boolean isHeatSourceInteractable(BlockState state) {
+        BlockConfig config = blocks.get(state.getBlock());
+        return config != null && config.interactable();
     }
 
     /**

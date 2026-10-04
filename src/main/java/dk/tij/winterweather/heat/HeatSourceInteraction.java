@@ -85,7 +85,7 @@ public final class HeatSourceInteraction {
             return InteractionResult.PASS;
         }
 
-        if (HeatSourceManager.isLit(state) && held.isEmpty()) {
+        if (HeatSourceManager.isLit(state) && held.isEmpty() && manager.isInteractable(state)) {
             return manager.extinguish(serverLevel, pos, state)
                     ? InteractionResult.SUCCESS
                     : InteractionResult.PASS;

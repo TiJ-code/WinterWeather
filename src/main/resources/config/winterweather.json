@@ -30,6 +30,7 @@
           "value": 5.0,
           "radius": 3.0,
           "burnout_seconds": 0,
+          "interactable": false,
           "variants": [
             "minecraft:furnace",
             "minecraft:smoker",
@@ -41,6 +42,7 @@
           "value": 1.0,
           "radius": 3.0,
           "burnout_seconds": 300,
+          "interactable": true,
           "variants": [
             "minecraft:torch",
             "minecraft:wall_torch"
@@ -51,6 +53,7 @@
           "value": 2.0,
           "radius": 3.0,
           "burnout_seconds": 3000,
+          "interactable": true,
           "variants": [
             "minecraft:soul_torch",
             "minecraft:soul_wall_torch"
@@ -61,6 +64,7 @@
           "value": 1.5,
           "radius": 3.5,
           "burnout_seconds": 600,
+          "interactable": true,
           "variants": [
             "minecraft:copper_torch",
             "minecraft:copper_wall_torch"
@@ -71,6 +75,7 @@
           "value": 2.0,
           "radius": 5.0,
           "burnout_seconds": 300,
+          "interactable": true,
           "variants": [
             "minecraft:campfire"
           ]
@@ -80,6 +85,7 @@
           "value": 2.0,
           "radius": 6.0,
           "burnout_seconds": 3000,
+          "interactable": true,
           "variants": [
             "minecraft:soul_campfire"
           ]
@@ -89,6 +95,7 @@
           "value": 3.0,
           "radius": 5.0,
           "burnout_seconds": 0,
+          "interactable": true,
           "variants": [
             "minecraft:fire"
           ]
@@ -98,6 +105,7 @@
           "value": 3.0,
           "radius": 7.0,
           "burnout_seconds": 0,
+          "interactable": true,
           "variants": [
             "minecraft:soul_fire"
           ]
@@ -107,6 +115,7 @@
           "value": 6.0,
           "radius": 3.0,
           "burnout_seconds": 0,
+          "interactable": true,
           "variants": [
             "minecraft:lava"
           ]
@@ -116,6 +125,7 @@
           "value": 1.5,
           "radius": 5.0,
           "burnout_seconds": 3600,
+          "interactable": true,
           "variants": [
             "minecraft:lantern",
             "minecraft:copper_lantern",

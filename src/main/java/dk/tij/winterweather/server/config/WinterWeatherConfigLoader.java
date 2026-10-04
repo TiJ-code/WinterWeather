@@ -219,6 +219,7 @@ public final class WinterWeatherConfigLoader {
                 getRequiredDouble(json, "radius");
         int burnoutSeconds =
                 getRequiredInt(json, "burnout_seconds");
+        boolean interactable = getOptionalBoolean(json, "interactable", true);
         JsonElement variantsElement =
                 json.get("variants");
         if (variantsElement == null) {
@@ -236,6 +237,7 @@ public final class WinterWeatherConfigLoader {
                 value,
                 radius,
                 burnoutSeconds,
+                interactable,
                 variants
         );
     }
@@ -514,6 +516,20 @@ public final class WinterWeatherConfigLoader {
 
         if (!element.isJsonPrimitive() || !element.getAsJsonPrimitive().isBoolean()) {
             throw new ConfigParseException("Property \"" + property + "\" must be a boolean.");
+        }
+
+        return element.getAsBoolean();
+    }
+
+    private static boolean getOptionalBoolean(JsonObject object, String property, boolean defaultValue) {
+        JsonElement element = object.get(property);
+
+        if (element == null) {
+            return defaultValue;
+        }
+
+        if (!element.isJsonPrimitive() || !element.getAsJsonPrimitive().isBoolean()) {
+            return defaultValue;
         }
 
         return element.getAsBoolean();

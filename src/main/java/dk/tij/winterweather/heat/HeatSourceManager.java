@@ -63,6 +63,9 @@ public final class HeatSourceManager {
         if (state.hasProperty(CampfireBlock.LIT)) {
             return state.setValue(CampfireBlock.LIT, lit);
         }
+        if (state.hasProperty(FurnaceBlock.LIT)) {
+            return state.setValue(FurnaceBlock.LIT, lit);
+        }
         return state;
     }
 
@@ -318,6 +321,17 @@ public final class HeatSourceManager {
      */
     public boolean relightingEnabled() {
         return config.get().heatSourceRelightingEnabled();
+    }
+
+    /**
+     * Reports whether players can turn off this heat source.
+     *
+     * @param state the block state
+     */
+    public boolean isInteractable(BlockState state) {
+        return config.get().heatSourcesEnabled()
+                && isExtinguishable(state)
+                && config.get().isHeatSourceInteractable(state);
     }
 
     /**
